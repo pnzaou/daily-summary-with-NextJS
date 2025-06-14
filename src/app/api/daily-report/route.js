@@ -79,23 +79,56 @@ export const GET = withAuthAndRole(async (req) => {
         const dailyReport = await DailyReport
             .find({ date: { $gte: startOfDay } })
             .populate("business", "name")
-            .select("business revenueCash revenueOrangeMoney revenueWave debts date")
+            .select("business revenueCash revenueOrangeMoney revenueWave sortieCaisse versementTataDiara sales debts reglementDebts date")
             .lean()
 
         const aggregateTotals = async (startDate) => {
             const res = await DailyReport.aggregate([
                 { $match: { date: { $gte: startDate } } },
                 {
+                    $project: {
+                        revenueCash: 1,
+                        revenueOrangeMoney: 1,
+                        revenueWave: 1,
+                        sortieCaisse: 1,
+                        versementTataDiara: 1,
+
+                        salesCount: { $size: "$sales" },
+
+                        debtsSum: { $sum: "$debts.total" },
+
+                        reglementDebtsSum: { $sum: "$reglementDebts.total" }
+                    }
+                },
+                {
                     $group: {
                         _id: null,
                         totalCash: { $sum: "$revenueCash" },
                         totalOM: { $sum: "$revenueOrangeMoney" },
                         totalWave: { $sum: "$revenueWave" },
-                        totalDebts: { $sum: "$debts" }
+
+                        totalSortieCaisse: { $sum: "$sortieCaisse" },
+                        totalVersementTataDiara: { $sum: "$versementTataDiara" },
+
+                        totalSalesCount: { $sum: "$salesCount" },
+
+                        totalDebts: { $sum: "$debtsSum" },
+
+                        totalReglementDebts: { $sum: "$reglementDebtsSum" }
                     }
                 }
-            ])
-            return res[0] || { totalCash: 0, totalOM: 0, totalWave: 0, totalDebts: 0 }
+            ]);
+
+            return res[0] || {
+                totalCash: 0,
+                totalOM: 0,
+                totalWave: 0,
+                totalSortieCaisse: 0,
+                totalVersementTataDiara: 0,
+                totalSalesCount: 0,
+                totalDebts: 0,
+                totalReglementDebts: 0,
+            };
         }
 
         const totalsDay = await aggregateTotals(startOfDay)

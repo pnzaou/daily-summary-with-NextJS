@@ -6,6 +6,8 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import "@/models/Business.Model"
 import Header from '@/components/header';
+import { preparingServerSideRequest } from '@/utils/preparingServerRequest';
+import AdminHome from '@/components/admin-home';
 
 
 const Pages = async () => {
@@ -15,6 +17,19 @@ const Pages = async () => {
     }
     await dbConnection()
     let business = []
+    let daisyReport = {}
+
+    if (session?.user?.role === "admin") {
+        const { cookie, host, protocol } = await preparingServerSideRequest()
+        const res = await fetch(`${protocol}://${host}/api/daily-report`, {
+            headers: {
+                cookie,
+            },
+        })
+
+        const { data } = await res.json()
+        daisyReport = data
+    }
 
     if (session?.user?.role === "gerant") {
         const rep = await User
@@ -34,9 +49,11 @@ const Pages = async () => {
 
     return (
         <>
-            <Header userName={session?.user?.name}/>
+            <Header userName={session.user.name} />
             {session?.user?.role === "admin"
-            ? (<>admin</>)
+            ? (<>
+                <AdminHome reportData={ daisyReport }/>
+            </>)
             : (
                 <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-0">
                     <div className="w-full max-w-md">
