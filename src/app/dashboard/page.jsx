@@ -4,6 +4,9 @@ import dbConnection from '@/lib/db';
 import User from '@/models/User.model';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
+import "@/models/Business.Model"
+import Header from '@/components/header';
+
 
 const Pages = async () => {
     const session = await getServerSession(authOptions);
@@ -31,10 +34,11 @@ const Pages = async () => {
 
     return (
         <>
+            <Header userName={session?.user?.name}/>
             {session?.user?.role === "admin"
             ? (<>admin</>)
             : (
-                <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+                <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-0">
                     <div className="w-full max-w-md">
                         <GerantForm business={business}/>
                     </div>
