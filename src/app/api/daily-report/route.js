@@ -6,6 +6,7 @@ import { withAuthAndRole } from "@/utils/withAuthAndRole"
 import mongoose from "mongoose"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
+import Business from "@/models/Business.Model"
 
 export const POST = withAuth(async (req) => {
     try {
