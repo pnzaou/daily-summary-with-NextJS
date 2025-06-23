@@ -8,6 +8,7 @@ import "@/models/Business.Model"
 import Header from '@/components/header';
 import { preparingServerSideRequest } from '@/utils/preparingServerRequest';
 import AdminHome from '@/components/admin-home';
+import RapportFormCompta from '@/components/comptable-form';
 
 
 const Pages = async () => {
@@ -31,7 +32,7 @@ const Pages = async () => {
         daisyReport = data
     }
 
-    if (session?.user?.role === "gerant") {
+    if (session?.user?.role === "gerant" || session?.user?.role === "comptable") {
         const rep = await User
             .findById(session.user.id)
             .select("businesses")
@@ -47,21 +48,28 @@ const Pages = async () => {
         }))
     }
 
+
     return (
         <>
             <Header userName={session.user.name} />
-            {session?.user?.role === "admin"
-            ? (<>
+            {session?.user?.role === "admin" &&
+             (<>
                 <AdminHome reportData={ daisyReport }/>
-            </>)
-            : (
+            </>)}
+            {session?.user?.role === "gerant" && (
                 <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-0">
                     <div className="w-full max-w-md">
                         <GerantForm business={business}/>
                     </div>
                 </div>
-            )
-            }
+            )}
+            {session?.user?.role === "comptable" && (
+                <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-0">
+                    <div className="w-full max-w-md">
+                        <RapportFormCompta/>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

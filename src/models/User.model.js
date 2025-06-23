@@ -25,7 +25,7 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["gerant", "admin"],
+      enum: ["gerant", "comptable", "admin"],
       default: "gerant",
     },
     // Un manager peut gérer plusieurs businesses
