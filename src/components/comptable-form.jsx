@@ -24,24 +24,22 @@ const BANQUES = [
 ];
 
 const PLATEFORMES = [
-  { id: "p1", nom: "Ria wafa" },
+  { id: "p1", nom: "Wafacash" },
   { id: "p2", nom: "Ria BIS" },
-  { id: "p3", nom: "WU wafa" },
-  { id: "p4", nom: "WU BIS" },
-  { id: "p5", nom: "Orange Money" },
-  { id: "p6", nom: "Free Money" },
+  { id: "p3", nom: "Orange Money" },
+  { id: "p4", nom: "Free Money" },
 ];
 
-export default function RapportFormCompta({ className, ...props }) {
+export default function RapportFormCompta({ business = [], className, ...props }) {
   // On utilise directement les arrays hardcodés
   const banques = BANQUES;
-  const plateformes = PLATEFORMES;
+  const businesses = business;
 
   const methods = useForm({
     defaultValues: {
       date: new Date().toISOString().slice(0, 10),
       banques: [{ nom: "", montant: 0 }],
-      caissePrincipale: { montant: 0, entrees: [{ description: "", montant: 0 }], sorties: [{ description: "", montant: 0 }] },
+      caissePrincipale: { montant: 0, entrees: [{ business: "", description: "", montant: 0 }], sorties: [{ description: "", montant: 0 }] },
       dettes: [{ description: "", montant: 0 }],
       plateformes: [],
     },
@@ -150,10 +148,20 @@ export default function RapportFormCompta({ className, ...props }) {
                       {entreesArray.fields.map((field, idx) => (
                         <div key={field.id} className="flex items-end space-x-2">
                           <div className="flex-1 grid gap-1">
+                            <Label>Activité</Label>
+                            <select
+                              {...methods.register(`caissePrincipale.entrees.${idx}.business`)}
+                              className="input"
+                            >
+                              <option value="">Sélectionner</option>
+                              {businesses.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                            </select> 
+                          </div>
+                          <div className="grid gap-1 w-56">
                             <Label>Description</Label>
                             <Input {...methods.register(`caissePrincipale.entrees.${idx}.description`)} />
                           </div>
-                          <div className="w-32 grid gap-1">
+                          <div className="flex-1 grid gap-1">
                             <Label>Montant</Label>
                             <Input
                               type="number"
@@ -244,6 +252,8 @@ export default function RapportFormCompta({ className, ...props }) {
 }
 
 function PlatformSection({ index, control, register, watch, remove }) {
+  const plateformes = PLATEFORMES;
+
   const dettesArray = useFieldArray({
     control,
     name: `plateformes.${index}.dettes`,
@@ -257,7 +267,7 @@ function PlatformSection({ index, control, register, watch, remove }) {
           <Label>Plateforme {index + 1}</Label>
           <select {...register(`plateformes.${index}.nom`)} className="input">
             <option value="">Sélectionner</option>
-            {PLATEFORMES.map((p) => (
+            {plateformes.map((p) => (
               <option key={p.id} value={p.nom}>
                 {p.nom}
               </option>

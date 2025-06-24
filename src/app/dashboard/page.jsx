@@ -22,7 +22,7 @@ const Pages = async () => {
 
     if (session?.user?.role === "admin") {
         const { cookie, host, protocol } = await preparingServerSideRequest()
-        const res = await fetch(`${protocol}://${host}/api/daily-report`, {
+        const res = await fetch(`${protocol}://${host}/api/dashboard-data`, {
             headers: {
                 cookie,
             },
@@ -64,9 +64,9 @@ const Pages = async () => {
                 </div>
             )}
             {session?.user?.role === "comptable" && (
-                <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-0">
-                    <div className="w-full max-w-md">
-                        <RapportFormCompta/>
+                <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-6">
+                    <div className="w-full max-w-xl">
+                        <RapportFormCompta business={business}/>
                     </div>
                 </div>
             )}
