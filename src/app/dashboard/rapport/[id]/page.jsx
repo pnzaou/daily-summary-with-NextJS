@@ -107,7 +107,7 @@ const Page = async ({ params }) => {
       {/* Ventes groupées */}
       <section className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <h2 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
-          Ventes ({report.sales.length})
+          Ventes 
         </h2>
         {Object.keys(groupedSales).length > 0 ? (
           <div className="space-y-4">
