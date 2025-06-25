@@ -58,7 +58,7 @@ const Pages = async () => {
             </>)}
             {session?.user?.role === "gerant" && (
                 <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-0">
-                    <div className="w-full max-w-md">
+                    <div className="w-full max-w-lg">
                         <GerantForm business={business}/>
                     </div>
                 </div>

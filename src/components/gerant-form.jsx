@@ -34,9 +34,9 @@ export default function GerantForm({ business = [], className, ...props }) {
       revenueWave: 0,
       sortieCaisse: 0,
       versementTataDiara: 0,
-      sales: [{ description: "" }],
-      debts: [{ description: "", total: "" }],
-      reglementDebts: [{ description: "", total: "" }],
+      sales: [{ numeroFacture: "", description: "", total: "" }],
+      debts: [{ numeroFacture: "", description: "", total: "" }],
+      reglementDebts: [{ numeroFacture: "", description: "", total: "" }],
     },
   });
 
@@ -198,7 +198,13 @@ export default function GerantForm({ business = [], className, ...props }) {
                       </h2>
                       <Button
                         type="button"
-                        onClick={() => salesArray.append({ description: "" })}
+                        onClick={() => 
+                          salesArray.append({
+                            numeroFacture: "",
+                            description: "",
+                            total: "",
+                          })
+                        }
                         className="h-8 w-8 p-0 text-lg flex items-center justify-center"
                       >
                         +
@@ -206,9 +212,21 @@ export default function GerantForm({ business = [], className, ...props }) {
                     </div>
                     {salesArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-end space-x-2">
+                        <div className="w-24 grid gap-1">
+                          <Label htmlFor={`sales.${idx}.numeroFacture`}>
+                            N° Facture
+                          </Label>
+                          <Input
+                            id={`sales.${idx}.numeroFacture`}
+                            type="number"
+                            {...register(`sales.${idx}.numeroFacture`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`sales.${idx}.description`}>
-                            Description {idx + 1}
+                            Description
                           </Label>
                           <Input
                             id={`sales.${idx}.description`}
@@ -216,12 +234,23 @@ export default function GerantForm({ business = [], className, ...props }) {
                             {...register(`sales.${idx}.description`)}
                           />
                         </div>
+                        <div className="w-32 grid gap-1">
+                          <Label htmlFor={`sales.${idx}.total`}>
+                            Total
+                          </Label>
+                          <Input
+                            id={`sales.${idx}.total`}
+                            type="number"
+                            {...register(`sales.${idx}.total`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </div>
                         <Button
                           type="button"
                           onClick={() => salesArray.remove(idx)}
-                          className="mb-1 h-8 w-8 p-0 text-lg flex items-center justify-center"
                         >
-                          -
+                          –
                         </Button>
                       </div>
                     ))}
@@ -236,7 +265,11 @@ export default function GerantForm({ business = [], className, ...props }) {
                       <Button
                         type="button"
                         onClick={() =>
-                          debtsArray.append({ description: "", total: "" })
+                          debtsArray.append({
+                            numeroFacture: "",
+                            description: "",
+                            total: "",
+                          })
                         }
                         className="h-8 w-8 p-0 text-lg flex items-center justify-center"
                       >
@@ -245,9 +278,21 @@ export default function GerantForm({ business = [], className, ...props }) {
                     </div>
                     {debtsArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-end space-x-2">
+                        <div className="w-24 grid gap-1">
+                          <Label htmlFor={`debts.${idx}.numeroFacture`}>
+                            N° Facture
+                          </Label>
+                          <Input
+                            id={`debts.${idx}.numeroFacture`}
+                            type="number"
+                            {...register(`debts.${idx}.numeroFacture`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`debts.${idx}.description`}>
-                            Description {idx + 1}
+                            Description
                           </Label>
                           <Input
                             id={`debts.${idx}.description`}
@@ -256,9 +301,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                           />
                         </div>
                         <div className="w-32 grid gap-1">
-                          <Label htmlFor={`debts.${idx}.total`}>
-                            Total {idx + 1}
-                          </Label>
+                          <Label htmlFor={`debts.${idx}.total`}>Total</Label>
                           <Input
                             id={`debts.${idx}.total`}
                             type="number"
@@ -266,16 +309,12 @@ export default function GerantForm({ business = [], className, ...props }) {
                               valueAsNumber: true,
                             })}
                           />
-                          {errors.debts?.[idx]?.total && (
-                            <p className="text-red-500 text-sm">Doit être un nombre</p>
-                          )}
                         </div>
                         <Button
                           type="button"
                           onClick={() => debtsArray.remove(idx)}
-                          className="mb-1 h-8 w-8 p-0 text-lg flex items-center justify-center"
                         >
-                          -
+                          –
                         </Button>
                       </div>
                     ))}
@@ -292,7 +331,11 @@ export default function GerantForm({ business = [], className, ...props }) {
                       <Button
                         type="button"
                         onClick={() =>
-                          regDebtsArray.append({ description: "", total: "" })
+                          regDebtsArray.append({
+                            numeroFacture: "",
+                            description: "",
+                            total: "",
+                          })
                         }
                         className="h-8 w-8 p-0 text-lg flex items-center justify-center"
                       >
@@ -301,19 +344,34 @@ export default function GerantForm({ business = [], className, ...props }) {
                     </div>
                     {regDebtsArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-end space-x-2">
+                        <div className="w-24 grid gap-1">
+                          <Label htmlFor={`reglementDebts.${idx}.numeroFacture`}>
+                            N° Facture
+                          </Label>
+                          <Input
+                            id={`reglementDebts.${idx}.numeroFacture`}
+                            type="number"
+                            {...register(
+                              `reglementDebts.${idx}.numeroFacture`,
+                              { valueAsNumber: true }
+                            )}
+                          />
+                        </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`reglementDebts.${idx}.description`}>
-                            Description {idx + 1}
+                            Description
                           </Label>
                           <Input
                             id={`reglementDebts.${idx}.description`}
                             type="text"
-                            {...register(`reglementDebts.${idx}.description`)}
+                            {...register(
+                              `reglementDebts.${idx}.description`
+                            )}
                           />
                         </div>
                         <div className="w-32 grid gap-1">
                           <Label htmlFor={`reglementDebts.${idx}.total`}>
-                            Total {idx + 1}
+                            Total
                           </Label>
                           <Input
                             id={`reglementDebts.${idx}.total`}
@@ -322,14 +380,10 @@ export default function GerantForm({ business = [], className, ...props }) {
                               valueAsNumber: true,
                             })}
                           />
-                          {errors.reglementDebts?.[idx]?.total && (
-                            <p className="text-red-500 text-sm">Doit être un nombre</p>
-                          )}
                         </div>
                         <Button
                           type="button"
                           onClick={() => regDebtsArray.remove(idx)}
-                          className="mb-1 h-8 w-8 p-0 text-lg flex items-center justify-center"
                         >
                           –
                         </Button>

@@ -13,7 +13,7 @@ export const POST = withAuth(async (req) => {
         await dbConnection()
 
         const session = await getServerSession(authOptions)
-        const {id} = session?.user
+        const {id} = session?.user ?? {};
 
         if(!id || !mongoose.Types.ObjectId.isValid(id)) {
             return NextResponse.json({
@@ -23,14 +23,38 @@ export const POST = withAuth(async (req) => {
             },{ status: 401 })
         }
 
-        const { business, revenueCash, revenueOrangeMoney, revenueWave, debts, reglementDebts, sales, sortieCaisse, versementTataDiara } = await req.json()
+        const { business, revenueCash, revenueOrangeMoney, revenueWave, debts = [], reglementDebts = [], sales = [], sortieCaisse, versementTataDiara } = await req.json()
 
         if (!business || !mongoose.Types.ObjectId.isValid(business)) {
             return NextResponse.json(
               { message: "Veuillez selectionner une activiter.", success: false, error: true },
               { status: 400 }
             );
-          }
+        }
+
+        const regsByFacture = reglementDebts.reduce((map, r) => {
+            const num = Number(r.numeroFacture);
+            const tot = Number(r.total);
+            map[num] = (map[num] || 0) + tot;
+            return map;
+        }, {})
+
+        const finalDebts = debts.reduce((acc, d) => {
+            const num = Number(d.numeroFacture);
+            const originalTotal = Number(d.total);
+            const payed = regsByFacture[num] || 0;
+            const remaining = originalTotal - payed;
+
+            if (remaining > 0) {
+                acc.push({
+                    numeroFacture: num,
+                    description: d.description,
+                    total: remaining
+                })
+            }
+
+            return acc;
+        }, [])
 
         const newReport = await DailyReport.create({
             business,
@@ -38,15 +62,20 @@ export const POST = withAuth(async (req) => {
             revenueCash: Number(revenueCash) || 0,
             revenueOrangeMoney: Number(revenueOrangeMoney) || 0,
             revenueWave: Number(revenueWave) || 0,
-            debts: Array.isArray(debts) ? debts.map(d => ({
-                description: d.description,
-                total: Number(d.total)
+            sales: Array.isArray(sales) 
+            ? sales.map((s) => ({
+                numeroFacture: Number(s.numeroFacture),
+                description: s.description,
+                total: Number(s.total),
+            })) 
+            : [],
+            debts: finalDebts,
+            reglementDebts: Array.isArray(reglementDebts) 
+            ? reglementDebts.map((r) => ({
+                numeroFacture: Number(r.numeroFacture),
+                description: r.description,
+                total: Number(r.total)
             })) : [],
-            reglementDebts: Array.isArray(reglementDebts) ? reglementDebts.map(d => ({
-                description: d.description,
-                total: Number(d.total)
-            })) : [],
-            sales: Array.isArray(sales) ? sales.map(s => s.description) : [],
             sortieCaisse: Number(sortieCaisse) || 0,
             versementTataDiara: Number(versementTataDiara) || 0,
         })

@@ -4,8 +4,9 @@ const DailyReportSchema = new mongoose.Schema(
   {
     sales: [
       {
-        type: String,
-        ref: "Vente",
+        numeroFacture: { type: Number, required: true },
+        description: { type: String, required: true },
+        total: { type: Number, required: true },
       },
     ],
     business: { //done
@@ -37,12 +38,14 @@ const DailyReportSchema = new mongoose.Schema(
     },
     debts: [
       {
+        numeroFacture: { type: Number, required: true },
         description: { type: String, required: true },
         total: { type: Number, required: true },
       }
     ],
     reglementDebts: [
       {
+        numeroFacture: { type: Number, required: true },
         description: { type: String, required: true },
         total: { type: Number, required: true },
       }
@@ -61,7 +64,7 @@ const DailyReportSchema = new mongoose.Schema(
     // Pour empêcher plusieurs rapports pour un même manager/business/jour
     indexes: [
       {
-        fields: { business: 1, manager: 1, date: 1 },
+        fields: { business: 1, gerant: 1, date: 1 },
         options: { unique: true },
       },
     ],

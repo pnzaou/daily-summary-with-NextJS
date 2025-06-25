@@ -104,12 +104,18 @@ export default function AdminHome({ reportData }) {
 
   return (
     <div className="mt-16 p-4">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-3">
         <Link
           href={`/dashboard/compta/${lastCompta._id}`}
           className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
         >
           Voir le rapport comptable
+        </Link>
+        <Link
+          href={`/dashboard/historique-dettes`}
+          className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+        >
+          historique dettes
         </Link>
       </div>
       <div className="bg-blue-50 dark:bg-blue-900 shadow rounded-lg p-4 mb-6">
