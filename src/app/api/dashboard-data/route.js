@@ -10,12 +10,42 @@ export const GET = withAuthAndRole(async (req) => {
   try {
     await dbConnection();
 
+    // --- Helpers pour fallback sur RapportCompta ---
+
+    // 1) dernier rapport qui a au moins une banque
+    async function fetchLatestBanques() {
+      const doc = await RapportCompta
+        .findOne({ "banques.0": { $exists: true } })
+        .sort({ date: -1 })
+        .lean();
+      return doc?.banques || [];
+    }
+
+    // 2) dernier rapport qui a un montant de caissePrincipale
+    async function fetchLatestCaisseMontant() {
+      const doc = await RapportCompta
+        .findOne({ "caissePrincipale.montant": { $exists: true } })
+        .sort({ date: -1 })
+        .lean();
+      return doc?.caissePrincipale?.montant ?? null;
+    }
+
+    // 3) dernier rapport qui contient une plateforme donnée
+    async function fetchLatestPlateformeByName(nom) {
+      const doc = await RapportCompta
+        .findOne({ "plateformes.nom": nom })
+        .sort({ date: -1 })
+        .lean();
+      return doc?.plateformes?.find(p => p.nom === nom) || null;
+    }
+
+    // --- bornes temporelles ---
     const now = new Date();
     const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startMon = new Date(now.getFullYear(), now.getMonth(), 1);
     const startYear = new Date(now.getFullYear(), 0, 1);
 
-    // Helper: agrégation DailyReport selon business names
+    // --- Helpers d’agrégation DailyReport ---
     async function aggregateFromDailyReport(from, names) {
       const pipeline = [
         { $match: { date: { $gte: from } } },
@@ -61,7 +91,7 @@ export const GET = withAuthAndRole(async (req) => {
       );
     }
 
-    // Helper: agrégation entrées location depuis RapportCompta
+    // --- Helper entrée location depuis RapportCompta ---
     async function aggregateFromRapportCompta(from, names) {
       const pipeline = [
         { $match: { date: { $gte: from } } },
@@ -87,58 +117,89 @@ export const GET = withAuthAndRole(async (req) => {
       return res?.totalEntrees || 0;
     }
 
-    // Fusion locations = daily + compta
+    // --- Fusion locations = daily + compta ---
     async function aggregateLocations(from, names) {
       const dr = await aggregateFromDailyReport(from, names);
       const rcE = await aggregateFromRapportCompta(from, names);
       return { ...dr, totalCash: dr.totalCash + rcE };
     }
 
-    // Récupération rapports gérants
+    // --- DailyReports bruts ---
     const dailyReports = await DailyReport.find({ date: { $gte: startDay } })
       .populate("business", "name")
       .lean();
 
-    // Dernier rapport compta et cartes banques
+    // --- Dernier rapport compta brut ---
     const lastCompta = await RapportCompta.findOne().sort({ date: -1 }).lean();
-    const banksCards = (lastCompta?.banques || []).map((b) => ({
+
+    // --- BANQUES : fallback si vide/missing ---
+    let banques = lastCompta?.banques ?? [];
+    if (!banques.length) {
+      banques = await fetchLatestBanques();
+    }
+    const banksCards = banques.map(b => ({
       nom: b.nom,
       montant: Number(b.montant),
     }));
 
-    // Définition des groupes
-    const quincailleries = ["Quincaillerie 1", "Quincaillerie 2"];
-    const locations = ["Appartement F4", "Appartement F3", "Mazda", "Sontafe"];
+    // --- CAISSE PRINCIPALE : montant fallback si absent ---
+    let caisseMontant = lastCompta?.caissePrincipale?.montant;
+    if (caisseMontant == null) {
+      caisseMontant = await fetchLatestCaisseMontant();
+    }
 
-    // Calcul totaux
+    // --- PLATEFORMES : liste fixe et fallback par nom ---
+    const platformNames = [
+      "Wafacash",
+      "Ria BIS",
+      "Orange Money",
+      "Free Money",
+      "Wizall"
+    ];
+    const plateformes = await Promise.all(
+      platformNames.map(async (nom) => {
+        let p = lastCompta?.plateformes?.find(p => p.nom === nom);
+        if (!p) {
+          p = await fetchLatestPlateformeByName(nom);
+        }
+        return p
+          ? {
+              nom: p.nom,
+              commission: p.commission,
+              fondDeCaisse: p.fondDeCaisse,
+              uvDisponible: p.uvDisponible,
+              rechargeUV: p.rechargeUV,
+              totalDepot: p.totalDepot,
+              totalRetrait: p.totalRetrait,
+              disponibilites: p.disponibilites
+            }
+          : null;
+      })
+    );
+    const plateformesClean = plateformes.filter(Boolean);
+
+    // --- Calcul des totaux DailyReport et CA global ---
+    const quincailleries = ["Quincaillerie 1", "Quincaillerie 2"];
+    const locations      = ["Appartement F4", "Appartement F3", "Mazda", "Sontafe"];
+
     const drTotals = {
       plain: {
-        day: await aggregateFromDailyReport(
-          startDay,
-          quincailleries.concat(locations)
-        ),
-        month: await aggregateFromDailyReport(
-          startMon,
-          quincailleries.concat(locations)
-        ),
-        year: await aggregateFromDailyReport(
-          startYear,
-          quincailleries.concat(locations)
-        ),
+        day:   await aggregateFromDailyReport(startDay, quincailleries.concat(locations)),
+        month: await aggregateFromDailyReport(startMon,  quincailleries.concat(locations)),
+        year:  await aggregateFromDailyReport(startYear, quincailleries.concat(locations)),
       },
       quincailleries: {
-        day: await aggregateFromDailyReport(startDay, quincailleries),
+        day:   await aggregateFromDailyReport(startDay, quincailleries),
         month: await aggregateFromDailyReport(startMon, quincailleries),
-        year: await aggregateFromDailyReport(startYear, quincailleries),
+        year:  await aggregateFromDailyReport(startYear, quincailleries),
       },
       locations: {
-        day: await aggregateLocations(startDay, locations),
-        month: await aggregateLocations(startMon, locations),
-        year: await aggregateLocations(startYear, locations),
+        day:   await aggregateLocations(startDay, locations),
+        month: await aggregateLocations(startMon,  locations),
+        year:  await aggregateLocations(startYear, locations),
       },
     };
 
-    // Calcul CA global
     const caGlobal = {};
     for (const period of ["day", "month", "year"]) {
       const dr = drTotals.plain[period];
@@ -146,7 +207,10 @@ export const GET = withAuthAndRole(async (req) => {
         dr.totalCash + dr.totalOM + dr.totalWave + dr.totalRegDebts;
 
       const start =
-        period === "day" ? startDay : period === "month" ? startMon : startYear;
+        period === "day" ? startDay :
+        period === "month" ? startMon :
+        startYear;
+
       const [{ totalCommission = 0 } = {}] = await RapportCompta.aggregate([
         { $match: { date: { $gte: start } } },
         { $unwind: "$plateformes" },
@@ -157,6 +221,7 @@ export const GET = withAuthAndRole(async (req) => {
           },
         },
       ]);
+
       const [{ totalCaisse = 0 } = {}] = await RapportCompta.aggregate([
         { $match: { date: { $gte: start } } },
         { $unwind: "$caissePrincipale.entrees" },
@@ -171,11 +236,24 @@ export const GET = withAuthAndRole(async (req) => {
       caGlobal[period] = caGerants + totalCommission + totalCaisse;
     }
 
+    // --- Réponse finale ---
     return NextResponse.json(
       {
         success: true,
         error: false,
-        data: { dailyReports, lastCompta, banksCards, drTotals, caGlobal },
+        data: {
+          dailyReports,
+          banksCards,
+          drTotals,
+          caGlobal,
+          lastCompta: {
+            _id: lastCompta?._id,
+            date: lastCompta?.date,
+            caissePrincipale: { montant: caisseMontant },
+            banques: banksCards,
+            plateformes: plateformesClean,
+          },
+        },
       },
       { status: 200 }
     );

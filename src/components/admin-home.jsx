@@ -87,7 +87,7 @@ export default function AdminHome({ reportData }) {
   );
 
   const renderPlateformesCards = () => (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
       <h3 className="col-span-full text-xl font-semibold">Transfert d'argent</h3>
       {lastCompta.plateformes.map(p => (
         <div key={p.nom} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">

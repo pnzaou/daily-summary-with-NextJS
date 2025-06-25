@@ -1,51 +1,62 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
 
 export default function DebtsPage() {
-  const [filter, setFilter] = useState('day');
+  const today = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter()
 
-  useEffect(() => {
+  const fetchData = () => {
     setLoading(true);
-    fetch(`/api/debts?filter=${filter}`)
+    fetch(`/api/debts?start=${startDate}&end=${endDate}`)
       .then(res => res.json())
-      .then(json => {
-        setData(json.data || []);
-      })
+      .then(json => setData(json.data || []))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [filter]);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <div className="mt-16 p-4">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-        ← Retour
-      </Button>
       <Card className="mb-6">
-        <CardHeader className="flex justify-between items-center">
+        <CardHeader className="flex flex-col md:flex-row justify-between items-center gap-4">
           <CardTitle className="text-xl">Liste des dettes & règlements</CardTitle>
-          <div className="space-x-2">
-            <Button
-              variant={filter === 'day' ? 'default' : 'outline'}
-              onClick={() => setFilter('day')}
-            >Aujourd'hui</Button>
-            <Button
-              variant={filter === 'month' ? 'default' : 'outline'}
-              onClick={() => setFilter('month')}
-            >Ce mois</Button>
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <div className="flex flex-col">
+              <label htmlFor="start" className="text-sm font-medium">Date de début</label>
+              <Input
+                id="start"
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="end" className="text-sm font-medium">Date de fin</label>
+              <Input
+                id="end"
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+              />
+            </div>
+            <Button onClick={fetchData} className="mt-2 sm:mt-6">Filtrer</Button>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-gray-500">Chargement...</p>
           ) : data.length === 0 ? (
-            <p className="text-gray-500">Aucune donnée pour cette période.</p>
+            <p className="text-gray-500">Aucune donnée pour ces dates.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
