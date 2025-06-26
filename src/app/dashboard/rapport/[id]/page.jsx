@@ -18,6 +18,7 @@ const Page = async ({ params }) => {
     const res = await fetch(`${protocol}://${host}/api/daily-report/${id}`, {
       headers: { cookie },
     });
+    console.log("res: ",res)
     const json = await res.json();
     report = json.data;
   }
