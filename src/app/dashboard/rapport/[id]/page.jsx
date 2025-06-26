@@ -9,11 +9,11 @@ const Page = async ({ params }) => {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/");
 
-  const { id } = params;
+  const { id } = await params;
   await dbConnection();
 
   let report = null;
-  if (session.user?.role === "admin") {
+  if (session.user?.role === "admin" || "comptable") {
     const { cookie, host, protocol } = await preparingServerSideRequest();
     const res = await fetch(`${protocol}://${host}/api/daily-report/${id}`, {
       headers: { cookie },

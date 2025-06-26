@@ -1,13 +1,15 @@
 import dbConnection from "@/lib/db"
 import DailyReport from "@/models/DailyReport.Model"
-import { withAuthAndRole } from "@/utils/withAuthAndRole"
+import { withAuth } from "@/utils/withAuth"
 import mongoose from "mongoose"
 import { NextResponse } from "next/server"
 
-export const GET = withAuthAndRole(async (req, {params}) => {
+export const GET = withAuth(async (req, {params}) => {
     try {
         await dbConnection()
         const { id } = await params
+
+        console.log("back : ", id)
 
         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
             return NextResponse.json({

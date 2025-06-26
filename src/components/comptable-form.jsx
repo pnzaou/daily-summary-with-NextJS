@@ -16,6 +16,7 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 // Données statiques
 const BANQUES = [
@@ -70,6 +71,13 @@ export default function RapportFormCompta({ business = [], className, ...props }
   return (
     <FormProvider {...methods}>
       <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <div className="fixed top-20 right-4">
+          <Link href="/dashboard/liste-rapport-quincaillerie">
+            <Button>
+              Voir les rapports quincaillerie
+            </Button>
+          </Link>
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>Rapport Comptable</CardTitle>
