@@ -3,6 +3,7 @@ import DailyReport from "@/models/DailyReport.Model"
 import { withAuth } from "@/utils/withAuth"
 import mongoose from "mongoose"
 import { NextResponse } from "next/server"
+import Business from "@/models/Business.Model"
 
 export const GET = withAuth(async (req, {params}) => {
     try {
