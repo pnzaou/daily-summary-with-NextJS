@@ -13,7 +13,7 @@ const Page = async ({ params }) => {
   await dbConnection();
 
   let report = null;
-  if (session.user?.role === "admin" || "comptable") {
+  if (session.user?.role === "admin" || session.user?.role === "comptable") {
     const { cookie, host, protocol } = await preparingServerSideRequest();
     const res = await fetch(`${protocol}://${host}/api/daily-report/${id}`, {
       headers: { cookie },
