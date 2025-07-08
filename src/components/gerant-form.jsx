@@ -214,7 +214,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                       <div key={field.id} className="flex items-end space-x-2">
                         <div className="w-24 grid gap-1">
                           <Label htmlFor={`sales.${idx}.ref`}>
-                            N° Facture
+                            Réf
                           </Label>
                           <Input
                             id={`sales.${idx}.ref`}
@@ -280,7 +280,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                       <div key={field.id} className="flex items-end space-x-2">
                         <div className="w-24 grid gap-1">
                           <Label htmlFor={`debts.${idx}.ref`}>
-                            N° Facture
+                            Réf
                           </Label>
                           <Input
                             id={`debts.${idx}.ref`}
@@ -346,7 +346,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                       <div key={field.id} className="flex items-end space-x-2">
                         <div className="w-24 grid gap-1">
                           <Label htmlFor={`reglementDebts.${idx}.ref`}>
-                            N° Facture
+                            Réf
                           </Label>
                           <Input
                             id={`reglementDebts.${idx}.ref`}
