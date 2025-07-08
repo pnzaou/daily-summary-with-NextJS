@@ -39,7 +39,7 @@ const authOptions = {
     ],
     session: {
         strategy: "jwt",
-        maxAge: 8 * 60 * 60,//expiration de la session après 8h
+        maxAge: 1 * 60 * 60,//expiration de la session après 1h
         updateAge: 0 //pour ne jamais rafraichir le token
     },
     callbacks: {

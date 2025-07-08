@@ -4,7 +4,7 @@ const DailyReportSchema = new mongoose.Schema(
   {
     sales: [
       {
-        numeroFacture: { type: Number, required: true },
+        ref: { type: String, required: true },
         description: { type: String, required: true },
         total: { type: Number, required: true },
       },
@@ -38,14 +38,14 @@ const DailyReportSchema = new mongoose.Schema(
     },
     debts: [
       {
-        numeroFacture: { type: Number, required: true },
+        ref: { type: String, required: true },
         description: { type: String, required: true },
         total: { type: Number, required: true },
       }
     ],
     reglementDebts: [
       {
-        numeroFacture: { type: Number, required: true },
+        ref: { type: String, required: true },
         description: { type: String, required: true },
         total: { type: Number, required: true },
       }

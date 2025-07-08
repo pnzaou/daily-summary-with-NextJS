@@ -34,9 +34,9 @@ export default function GerantForm({ business = [], className, ...props }) {
       revenueWave: 0,
       sortieCaisse: 0,
       versementTataDiara: 0,
-      sales: [{ numeroFacture: "", description: "", total: "" }],
-      debts: [{ numeroFacture: "", description: "", total: "" }],
-      reglementDebts: [{ numeroFacture: "", description: "", total: "" }],
+      sales: [{ ref: "", description: "", total: "" }],
+      debts: [{ ref: "", description: "", total: "" }],
+      reglementDebts: [{ ref: "", description: "", total: "" }],
     },
   });
 
@@ -200,7 +200,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                         type="button"
                         onClick={() => 
                           salesArray.append({
-                            numeroFacture: "",
+                            ref: "",
                             description: "",
                             total: "",
                           })
@@ -213,13 +213,13 @@ export default function GerantForm({ business = [], className, ...props }) {
                     {salesArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-end space-x-2">
                         <div className="w-24 grid gap-1">
-                          <Label htmlFor={`sales.${idx}.numeroFacture`}>
+                          <Label htmlFor={`sales.${idx}.ref`}>
                             N° Facture
                           </Label>
                           <Input
-                            id={`sales.${idx}.numeroFacture`}
+                            id={`sales.${idx}.ref`}
                             type="number"
-                            {...register(`sales.${idx}.numeroFacture`, {
+                            {...register(`sales.${idx}.ref`, {
                               valueAsNumber: true,
                             })}
                           />
@@ -266,7 +266,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                         type="button"
                         onClick={() =>
                           debtsArray.append({
-                            numeroFacture: "",
+                            ref: "",
                             description: "",
                             total: "",
                           })
@@ -279,13 +279,13 @@ export default function GerantForm({ business = [], className, ...props }) {
                     {debtsArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-end space-x-2">
                         <div className="w-24 grid gap-1">
-                          <Label htmlFor={`debts.${idx}.numeroFacture`}>
+                          <Label htmlFor={`debts.${idx}.ref`}>
                             N° Facture
                           </Label>
                           <Input
-                            id={`debts.${idx}.numeroFacture`}
+                            id={`debts.${idx}.ref`}
                             type="number"
-                            {...register(`debts.${idx}.numeroFacture`, {
+                            {...register(`debts.${idx}.ref`, {
                               valueAsNumber: true,
                             })}
                           />
@@ -332,7 +332,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                         type="button"
                         onClick={() =>
                           regDebtsArray.append({
-                            numeroFacture: "",
+                            ref: "",
                             description: "",
                             total: "",
                           })
@@ -345,14 +345,14 @@ export default function GerantForm({ business = [], className, ...props }) {
                     {regDebtsArray.fields.map((field, idx) => (
                       <div key={field.id} className="flex items-end space-x-2">
                         <div className="w-24 grid gap-1">
-                          <Label htmlFor={`reglementDebts.${idx}.numeroFacture`}>
+                          <Label htmlFor={`reglementDebts.${idx}.ref`}>
                             N° Facture
                           </Label>
                           <Input
-                            id={`reglementDebts.${idx}.numeroFacture`}
+                            id={`reglementDebts.${idx}.ref`}
                             type="number"
                             {...register(
-                              `reglementDebts.${idx}.numeroFacture`,
+                              `reglementDebts.${idx}.ref`,
                               { valueAsNumber: true }
                             )}
                           />

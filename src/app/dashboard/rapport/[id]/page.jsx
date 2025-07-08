@@ -44,7 +44,7 @@ const Page = async ({ params }) => {
   // Helpers pour grouper par numéro de facture
   const groupByInvoice = (arr) =>
     (arr || []).reduce((acc, item) => {
-      const key = item.numeroFacture;
+      const key = item.ref;
       if (!acc[key]) acc[key] = [];
       acc[key].push(item);
       return acc;
@@ -112,10 +112,10 @@ const Page = async ({ params }) => {
         </h2>
         {Object.keys(groupedSales).length > 0 ? (
           <div className="space-y-4">
-            {Object.entries(groupedSales).map(([invoice, items]) => (
-              <div key={invoice}>
+            {Object.entries(groupedSales).map(([ref, items]) => (
+              <div key={ref}>
                 <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                  Facture #{invoice} ({items.length} ligne{items.length > 1 ? 's' : ''})
+                  Réf: {ref} ({items.length} ligne{items.length > 1 ? 's' : ''})
                 </h3>
                 <ul className="list-disc list-inside text-gray-600 dark:text-gray-400">
                   {items.map((i) => (
@@ -141,10 +141,10 @@ const Page = async ({ params }) => {
           </h2>
           {Object.keys(groupedDebts).length > 0 ? (
             <div className="space-y-4">
-              {Object.entries(groupedDebts).map(([invoice, items]) => (
-                <div key={invoice}>
+              {Object.entries(groupedDebts).map(([ref, items]) => (
+                <div key={ref}>
                   <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                    Facture #{invoice} ({items.length} ligne{items.length > 1 ? 's' : ''})
+                    Réf: {ref} ({items.length} ligne{items.length > 1 ? 's' : ''})
                   </h3>
                   <ul className="list-disc list-inside text-gray-600 dark:text-gray-400">
                     {items.map((d) => (
@@ -170,10 +170,10 @@ const Page = async ({ params }) => {
           </h2>
           {Object.keys(groupedReglements).length > 0 ? (
             <div className="space-y-4">
-              {Object.entries(groupedReglements).map(([invoice, items]) => (
-                <div key={invoice}>
+              {Object.entries(groupedReglements).map(([ref, items]) => (
+                <div key={ref}>
                   <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                    Facture #{invoice} ({items.length} ligne{items.length > 1 ? 's' : ''})
+                    Réf: {ref} ({items.length} ligne{items.length > 1 ? 's' : ''})
                   </h3>
                   <ul className="list-disc list-inside text-gray-600 dark:text-gray-400">
                     {items.map((r) => (

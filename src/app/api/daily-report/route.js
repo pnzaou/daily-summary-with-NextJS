@@ -32,22 +32,22 @@ export const POST = withAuth(async (req) => {
             );
         }
 
-        const regsByFacture = reglementDebts.reduce((map, r) => {
-            const num = Number(r.numeroFacture);
+        const regsByRef = reglementDebts.reduce((map, r) => {
+            const key = r.ref.toLowerCase();
             const tot = Number(r.total);
-            map[num] = (map[num] || 0) + tot;
+            map[key] = (map[key] || 0) + tot;
             return map;
         }, {})
 
         const finalDebts = debts.reduce((acc, d) => {
-            const num = Number(d.numeroFacture);
+            const key = d.ref.toLowerCase();
             const originalTotal = Number(d.total);
-            const payed = regsByFacture[num] || 0;
+            const payed = regsByRef[key] || 0;
             const remaining = originalTotal - payed;
 
             if (remaining > 0) {
                 acc.push({
-                    numeroFacture: num,
+                    ref: key,
                     description: d.description,
                     total: remaining
                 })
@@ -64,7 +64,7 @@ export const POST = withAuth(async (req) => {
             revenueWave: Number(revenueWave) || 0,
             sales: Array.isArray(sales) 
             ? sales.map((s) => ({
-                numeroFacture: Number(s.numeroFacture),
+                ref: s.ref.toLowerCase(),
                 description: s.description,
                 total: Number(s.total),
             })) 
@@ -72,7 +72,7 @@ export const POST = withAuth(async (req) => {
             debts: finalDebts,
             reglementDebts: Array.isArray(reglementDebts) 
             ? reglementDebts.map((r) => ({
-                numeroFacture: Number(r.numeroFacture),
+                ref: r.ref.toLowerCase(),
                 description: r.description,
                 total: Number(r.total)
             })) : [],
