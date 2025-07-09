@@ -46,6 +46,7 @@ export default function GerantForm({ business = [], className, ...props }) {
     handleSubmit,
     setValue,
     watch,
+    trigger,
     reset,
     formState: { errors, isSubmitting },
   } = methods;
@@ -59,24 +60,50 @@ export default function GerantForm({ business = [], className, ...props }) {
 
   const selectedBusiness = watch("business");
 
-  const onSubmit = async (data) => {
-    
-    if(step < 4){
-      setStep(step + 1);
+  const validateAndNext = async () => {
+    // Validate current step's ref fields
+    let ok;
+    if (step === 2) ok = await trigger('sales');
+    else if (step === 3) ok = await trigger('debts');
+    else if (step === 4) ok = await trigger('reglementDebts');
+    if (!ok) {
+      toast.error(
+        "Chaque référence doit être au format 'facture num XXXX' ou 'ticket num XXXX'."
+      );
       return;
     }
+    setStep(step + 1);
+  };
+
+  const onSubmit = async (data) => {
+    // Ensure refs are trimmed
+    data.sales = data.sales.map((item) => ({ ...item, ref: item.ref.trim() }));
+    data.debts = data.debts.map((item) => ({ ...item, ref: item.ref.trim() }));
+    data.reglementDebts = data.reglementDebts.map((item) => ({ ...item, ref: item.ref.trim() }));
+
     setIsLoading(true);
     try {
       const rep = await axios.post("/api/daily-report", data);
-      toast.success( rep.data.message || "Rapport enregistré avec succès" );
+      toast.success(rep.data.message || "Rapport enregistré avec succès");
       reset();
       setStep(1);
     } catch (error) {
       console.error(error);
-      toast.error( error.response?.data?.message || "Erreur lors de l'enregistrement du rapport" );
+      toast.error(
+        error.response?.data?.message || "Erreur lors de l'enregistrement du rapport"
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refValidation = {
+    required: 'Référence obligatoire',
+    pattern: {
+      value: /^(facture num \d+|ticket num \d+)$/i,
+      message:
+        "La référence doit être 'facture num XXXX' ou 'ticket num XXXX'.",
+    },
   };
 
   return (
@@ -218,11 +245,15 @@ export default function GerantForm({ business = [], className, ...props }) {
                           </Label>
                           <Input
                             id={`sales.${idx}.ref`}
-                            type="number"
-                            {...register(`sales.${idx}.ref`, {
-                              valueAsNumber: true,
-                            })}
+                            type="text"
+                            {...register(`sales.${idx}.ref`, refValidation)}
+                            onBlur={() => trigger(`sales.${idx}.ref`)}
                           />
+                          {errors.sales?.[idx]?.ref && (
+                            <p className="text-red-500 text-sm">
+                              {errors.sales[idx].ref.message}
+                            </p>
+                          )}
                         </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`sales.${idx}.description`}>
@@ -284,11 +315,15 @@ export default function GerantForm({ business = [], className, ...props }) {
                           </Label>
                           <Input
                             id={`debts.${idx}.ref`}
-                            type="number"
-                            {...register(`debts.${idx}.ref`, {
-                              valueAsNumber: true,
-                            })}
+                            type="text"
+                            {...register(`debts.${idx}.ref`, refValidation)}
+                            onBlur={() => trigger(`debts.${idx}.ref`)}
                           />
+                          {errors.debts?.[idx]?.ref && (
+                            <p className="text-red-500 text-sm">
+                              {errors.debts[idx].ref.message}
+                            </p>
+                          )}
                         </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`debts.${idx}.description`}>
@@ -350,12 +385,18 @@ export default function GerantForm({ business = [], className, ...props }) {
                           </Label>
                           <Input
                             id={`reglementDebts.${idx}.ref`}
-                            type="number"
+                            type="text"
                             {...register(
                               `reglementDebts.${idx}.ref`,
-                              { valueAsNumber: true }
+                              refValidation
                             )}
+                            onBlur={() => trigger(`reglementDebts.${idx}.ref`)}
                           />
+                          {errors.reglementDebts?.[idx]?.ref && (
+                            <p className="text-red-500 text-sm">
+                              {errors.reglementDebts[idx].ref.message}
+                            </p>
+                          )}
                         </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`reglementDebts.${idx}.description`}>
