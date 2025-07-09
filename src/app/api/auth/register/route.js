@@ -18,7 +18,7 @@ export const POST = withAuthAndRole(async (req) => {
             }, { status: 400 })
         }
 
-        if(!["admin", "gerant"].includes(role)) {
+        if(!["admin", "gerant", "comptable"].includes(role)) {
             return NextResponse.json({
                 message: "rôle invalide.",
                 success: false,
