@@ -9,93 +9,105 @@ import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
 
 export const POST = withAuth(async (req) => {
-    try {
-        await dbConnection()
+  try {
+    await dbConnection();
 
-        const session = await getServerSession(authOptions)
-        const {id} = session?.user ?? {};
-
-        if(!id || !mongoose.Types.ObjectId.isValid(id)) {
-            return NextResponse.json({
-                message: "Utilisateur non trouvé!",
-                success: false,
-                error: true
-            },{ status: 401 })
-        }
-
-        const { business, revenueCash, revenueOrangeMoney, revenueWave, debts = [], reglementDebts = [], sales = [], sortieCaisse, versementTataDiara } = await req.json()
-
-        if (!business || !mongoose.Types.ObjectId.isValid(business)) {
-            return NextResponse.json(
-              { message: "Veuillez selectionner une activiter.", success: false, error: true },
-              { status: 400 }
-            );
-        }
-
-        const regsByRef = reglementDebts.reduce((map, r) => {
-            const key = r.ref.toLowerCase();
-            const tot = Number(r.total);
-            map[key] = (map[key] || 0) + tot;
-            return map;
-        }, {})
-
-        const finalDebts = debts.reduce((acc, d) => {
-            const key = d.ref.toLowerCase();
-            const originalTotal = Number(d.total);
-            const payed = regsByRef[key] || 0;
-            const remaining = originalTotal - payed;
-
-            if (remaining > 0) {
-                acc.push({
-                    ref: key,
-                    description: d.description,
-                    total: remaining
-                })
-            }
-
-            return acc;
-        }, [])
-
-        const newReport = await DailyReport.create({
-            business,
-            gerant: id,
-            revenueCash: Number(revenueCash) || 0,
-            revenueOrangeMoney: Number(revenueOrangeMoney) || 0,
-            revenueWave: Number(revenueWave) || 0,
-            sales: Array.isArray(sales) 
-            ? sales.map((s) => ({
-                ref: s.ref.toLowerCase(),
-                description: s.description,
-                total: Number(s.total),
-            })) 
-            : [],
-            debts: finalDebts,
-            reglementDebts: Array.isArray(reglementDebts) 
-            ? reglementDebts.map((r) => ({
-                ref: r.ref.toLowerCase(),
-                description: r.description,
-                total: Number(r.total)
-            })) : [],
-            sortieCaisse: Number(sortieCaisse) || 0,
-            versementTataDiara: Number(versementTataDiara) || 0,
-        })
-
-        return NextResponse.json({
-            message: "Rapport créé avec succès!",
-            success: true,
-            error: false,
-            data: newReport
-        }, { status: 201 })
-
-    } catch (error) {
-        console.error("Erreur lors de la création du rapport: ", error)
-        return NextResponse.json({
-            message: "Erreur! Veuillez réessayer.",
-            success: false,
-            error: true
-        }, { status: 500 })
+    const session = await getServerSession(authOptions);
+    const { id: gerantId } = session?.user ?? {};
+    if (!gerantId || !mongoose.Types.ObjectId.isValid(gerantId)) {
+      return NextResponse.json(
+        { message: "Utilisateur non trouvé !", success: false, error: true },
+        { status: 401 }
+      );
     }
-})
+
+    const {
+      business,
+      revenueCash = 0,
+      revenueOrangeMoney = 0,
+      revenueWave = 0,
+      debts = [],
+      reglementDebts = [],
+      sales = [],
+      sortieCaisse = 0,
+      versementTataDiara = 0,
+    } = await req.json();
+
+    if (!business || !mongoose.Types.ObjectId.isValid(business)) {
+      return NextResponse.json(
+        {
+          message: "Veuillez sélectionner une activité.",
+          success: false,
+          error: true,
+        },
+        { status: 400 }
+      );
+    }
+
+    // helper to normalize & filter out empty entries
+    function cleanArray(arr) {
+      return (Array.isArray(arr) ? arr : [])
+        .map((item) => ({
+          ref:         (item.ref || "").trim().toLowerCase(),
+          description: (item.description || "").trim(),
+          total:       Number(item.total) || 0,
+        }))
+        .filter(
+          ({ ref, description, total }) =>
+            ref !== "" || description !== "" || total > 0
+        );
+    }
+
+    const cleanSales = cleanArray(sales);
+    const cleanDebts = cleanArray(debts);
+    const cleanRegs  = cleanArray(reglementDebts);
+
+    // reglements groupés par ref
+    const regsByRef = cleanRegs.reduce((map, { ref, total }) => {
+      map[ref] = (map[ref] || 0) + total;
+      return map;
+    }, {});
+
+    // recalcul du solde des dettes après règlement
+    const finalDebts = cleanDebts.reduce((acc, { ref, description, total }) => {
+      const payed     = regsByRef[ref] || 0;
+      const remaining = total - payed;
+      if (remaining > 0) {
+        acc.push({ ref, description, total: remaining });
+      }
+      return acc;
+    }, []);
+
+    const newReport = await DailyReport.create({
+      business,
+      gerant: gerantId,
+      revenueCash:        Number(revenueCash),
+      revenueOrangeMoney: Number(revenueOrangeMoney),
+      revenueWave:        Number(revenueWave),
+      sales:              cleanSales,
+      debts:              finalDebts,
+      reglementDebts:     cleanRegs,
+      sortieCaisse:       Number(sortieCaisse),
+      versementTataDiara: Number(versementTataDiara),
+    });
+
+    return NextResponse.json(
+      {
+        message: "Rapport créé avec succès !",
+        success: true,
+        error: false,
+        data: newReport,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Erreur lors de la création du rapport: ", error);
+    return NextResponse.json(
+      { message: "Erreur ! Veuillez réessayer.", success: false, error: true },
+      { status: 500 }
+    );
+  }
+});
 
 export const GET = withAuthAndRole(async (req) => {
     try {

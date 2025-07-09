@@ -88,9 +88,25 @@ export default function GerantForm({ business = [], className, ...props }) {
     }
 
     // Final submission
-    data.sales = data.sales.map((item) => ({ ...item, ref: item.ref.trim() }));
-    data.debts = data.debts.map((item) => ({ ...item, ref: item.ref.trim() }));
-    data.reglementDebts = data.reglementDebts.map((item) => ({ ...item, ref: item.ref.trim() }));
+    const clean = (arr) => 
+      (arr || [])
+        .map((item) => ({
+          ref: item.ref.trim(),
+          description: item.description.trim(),
+          total: item.total
+        }))
+        .filter(
+          ({ ref, description, total }) => 
+            ref !== "" || description !== "" || total !== ""
+        );
+    
+    data.sales = clean(data.sales);
+    data.debts = clean(data.debts);
+    data.reglementDebts = clean(data.reglementDebts);
+
+    if(data.sales.length === 0) delete data.sales;
+    if(data.debts.length === 0) delete data.debts;
+    if(data.reglementDebts.length === 0) delete data.reglementDebts;
 
     setIsLoading(true);
     try {
