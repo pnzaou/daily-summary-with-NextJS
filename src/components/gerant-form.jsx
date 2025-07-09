@@ -38,6 +38,7 @@ export default function GerantForm({ business = [], className, ...props }) {
       debts: [{ ref: "", description: "", total: "" }],
       reglementDebts: [{ ref: "", description: "", total: "" }],
     },
+    mode: 'onBlur'
   });
 
   const {
@@ -48,7 +49,7 @@ export default function GerantForm({ business = [], className, ...props }) {
     watch,
     trigger,
     reset,
-    formState: { errors, isSubmitting },
+    formState: {errors}
   } = methods;
 
   const [step, setStep] = useState(1);
@@ -60,23 +61,33 @@ export default function GerantForm({ business = [], className, ...props }) {
 
   const selectedBusiness = watch("business");
 
-  const validateAndNext = async () => {
-    // Validate current step's ref fields
-    let ok;
-    if (step === 2) ok = await trigger('sales');
-    else if (step === 3) ok = await trigger('debts');
-    else if (step === 4) ok = await trigger('reglementDebts');
-    if (!ok) {
-      toast.error(
-        "Chaque référence doit être au format 'facture num XXXX' ou 'ticket num XXXX'."
-      );
-      return;
-    }
-    setStep(step + 1);
+  const refValidation = {
+      pattern: /^(facture num \d+|ticket num \d+)$/i,
   };
 
   const onSubmit = async (data) => {
-    // Ensure refs are trimmed
+    // If not final step, validate refs then go to next
+    if (step < 4) {
+      setStep((s) => s + 1);
+      return;
+    }
+
+    const salesOk = await trigger(salesArray.fields.map((_, i) => `sales.${i}.ref`));
+    const debtsOk = await trigger(debtsArray.fields.map((_, i) => `debts.${i}.ref`));
+    const regOk = await trigger(
+      regDebtsArray.fields.map((_, i) => `reglementDebts.${i}.ref`)
+    );
+
+    if (!salesOk || !debtsOk || !regOk) {
+      if (!salesOk) setStep(2);
+      else if (!debtsOk) setStep(3);
+      else setStep(4);
+
+      toast.error("Chaque référence doit être au format 'facture num XXXX' ou 'ticket num XXXX'.")
+      return;
+    }
+
+    // Final submission
     data.sales = data.sales.map((item) => ({ ...item, ref: item.ref.trim() }));
     data.debts = data.debts.map((item) => ({ ...item, ref: item.ref.trim() }));
     data.reglementDebts = data.reglementDebts.map((item) => ({ ...item, ref: item.ref.trim() }));
@@ -89,22 +100,12 @@ export default function GerantForm({ business = [], className, ...props }) {
       setStep(1);
     } catch (error) {
       console.error(error);
-      toast.error(
-        error.response?.data?.message || "Erreur lors de l'enregistrement du rapport"
-      );
+      toast.error(error.response?.data?.message || "Erreur lors de l'enregistrement du rapport");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const refValidation = {
-    required: 'Référence obligatoire',
-    pattern: {
-      value: /^(facture num \d+|ticket num \d+)$/i,
-      message:
-        "La référence doit être 'facture num XXXX' ou 'ticket num XXXX'.",
-    },
-  };
 
   return (
     <FormProvider {...methods}>
@@ -247,13 +248,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                             id={`sales.${idx}.ref`}
                             type="text"
                             {...register(`sales.${idx}.ref`, refValidation)}
-                            onBlur={() => trigger(`sales.${idx}.ref`)}
                           />
-                          {errors.sales?.[idx]?.ref && (
-                            <p className="text-red-500 text-sm">
-                              {errors.sales[idx].ref.message}
-                            </p>
-                          )}
                         </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`sales.${idx}.description`}>
@@ -317,13 +312,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                             id={`debts.${idx}.ref`}
                             type="text"
                             {...register(`debts.${idx}.ref`, refValidation)}
-                            onBlur={() => trigger(`debts.${idx}.ref`)}
                           />
-                          {errors.debts?.[idx]?.ref && (
-                            <p className="text-red-500 text-sm">
-                              {errors.debts[idx].ref.message}
-                            </p>
-                          )}
                         </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`debts.${idx}.description`}>
@@ -390,13 +379,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                               `reglementDebts.${idx}.ref`,
                               refValidation
                             )}
-                            onBlur={() => trigger(`reglementDebts.${idx}.ref`)}
                           />
-                          {errors.reglementDebts?.[idx]?.ref && (
-                            <p className="text-red-500 text-sm">
-                              {errors.reglementDebts[idx].ref.message}
-                            </p>
-                          )}
                         </div>
                         <div className="flex-1 grid gap-1">
                           <Label htmlFor={`reglementDebts.${idx}.description`}>
