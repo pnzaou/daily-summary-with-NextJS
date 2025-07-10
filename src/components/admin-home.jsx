@@ -131,15 +131,17 @@ export default function AdminHome({ reportData }) {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <div className="text-sm">Aujourd'hui</div>
-            <div className="text-2xl font-semibold">{caGlobal.day}</div>
+            <div className="text-2xl font-semibold">{formatMoney(caGlobal.day)}</div>
           </div>
           <div>
             <div className="text-sm">Ce mois</div>
-            <div className="text-2xl font-semibold">{caGlobal.month}</div>
+            <div className="text-2xl font-semibold">{formatMoney(caGlobal.month)}</div>
+
           </div>
           <div>
             <div className="text-sm">Cette année</div>
-            <div className="text-2xl font-semibold">{caGlobal.year}</div>
+            <div className="text-2xl font-semibold">{formatMoney(caGlobal.year)}</div>
+
           </div>
         </div>
       </div>
