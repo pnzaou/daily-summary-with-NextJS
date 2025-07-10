@@ -6,7 +6,7 @@ import { withAuthAndRole } from "@/utils/withAuthAndRole";
 import { NextResponse } from "next/server";
 import Business from "@/models/Business.Model";
 
-export const GET = withAuthAndRole(async (req) => {
+export const GET = async (req) => {
   try {
     await dbConnection();
 
@@ -132,33 +132,28 @@ export const GET = withAuthAndRole(async (req) => {
     // --- Dernier rapport compta brut ---
     const lastCompta = await RapportCompta.findOne().sort({ date: -1 }).lean();
 
-    // --- BANQUES : fallback si vide/missing ---
-    // Helper: dernier rapport qui contient une banque donnée
-    async function fetchLatestBanqueByName(nom) {
+    async function fetchLatestBanqueByName(nom) { 
       const doc = await RapportCompta
         .findOne({ "banques.nom": nom })
         .sort({ date: -1 })
         .lean();
       return doc?.banques?.find(b => b.nom === nom) || null;
-    }
+     }
 
-    // --- BANQUES : fallback individuel par banque ---
-    // Récupère la liste de tous les noms de banques disponibles dans les rapports
-    const allBankNames = (await fetchLatestBanques()).map(b => b.nom);
+    // 1) récupère **tous** les noms de banques
+    const allBankNames = await RapportCompta.distinct("banques.nom");
 
-    // Pour chaque nom de banque, on prend la valeur du dernier rapport ou du rapport antérieur le plus récent
+    // 2) pour chaque nom, on applique la logique
     const banquesResolved = [];
     for (const name of allBankNames) {
-      // recherche dans le dernier rapport
       const found = lastCompta?.banques?.find(b => b.nom === name);
       if (found) {
-        // on accepte même montant à "0"
-        banquesResolved.push({ nom: found.nom, montant: Number(found.montant) });
+        banquesResolved.push({ nom: name, montant: Number(found.montant) });
       } else {
-        // fallback sur le rapport antérieur
+        console.log("LES AUTRES")
         const fallback = await fetchLatestBanqueByName(name);
         if (fallback) {
-          banquesResolved.push({ nom: fallback.nom, montant: Number(fallback.montant) });
+          banquesResolved.push({ nom: name, montant: Number(fallback.montant) });
         }
       }
     }
@@ -287,4 +282,4 @@ export const GET = withAuthAndRole(async (req) => {
       { status: 500 }
     );
   }
-});
+};
