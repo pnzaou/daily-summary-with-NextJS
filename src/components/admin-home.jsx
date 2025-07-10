@@ -16,6 +16,14 @@ import Link from "next/link";
 export default function AdminHome({ reportData }) {
   const { dailyReports, banksCards, drTotals, caGlobal, lastCompta } = reportData;
 
+  // Helper to format numbers with dots and append FCFA
+  const formatMoney = (value) => {
+    if (value == null) return "-";
+    const str = value.toString();
+    const withDots = str.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `${withDots} FCFA`;
+  };
+
   const formatDate = (iso) =>
     iso
       ? new Date(iso).toLocaleDateString("fr-FR", {
@@ -38,14 +46,14 @@ export default function AdminHome({ reportData }) {
             <div key={p} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
               <div className="text-lg font-semibold mb-1">{labels[p]}</div>
               <div className="text-sm">Ventes: {t.totalSalesCount || 0}</div>
-              <div className="text-sm">Espèces: {t.totalCash || 0}</div>
-              <div className="text-sm">Wave: {t.totalWave || 0}</div>
-              <div className="text-sm">Orange Money: {t.totalOM || 0}</div>
-              <div className="text-sm">Règlement dettes: {t.totalRegDebts || 0}</div>
+              <div className="text-sm">Espèces: {formatMoney(t.totalCash || 0)}</div>
+              <div className="text-sm">Wave: {formatMoney(t.totalWave || 0)}</div>
+              <div className="text-sm">Orange Money: {formatMoney(t.totalOM || 0)}</div>
+              <div className="text-sm">Règlement dettes: {formatMoney(t.totalRegDebts || 0)}</div>
               <div className="font-semibold mt-1">Total entrées: {incoming}</div>
               <hr className="my-2" />
-              <div className="text-sm">Dettes: {t.totalDebts || 0}</div>
-              <div className="text-sm">Versements Tata: {t.totalVersementTataDiara || 0}</div>
+              <div className="text-sm">Dettes: {formatMoney(t.totalDebts || 0)}</div>
+              <div className="text-sm">Versements Tata: {formatMoney(t.totalVersementTataDiara || 0)}</div>
             </div>
           );
         })}
@@ -64,7 +72,7 @@ export default function AdminHome({ reportData }) {
           return (
             <div key={p} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
               <div className="text-lg font-semibold mb-1">{labels[p]}</div>
-              <div className="text-2xl">{t.totalCash || 0}</div>
+              <div className="text-2xl">{formatMoney(t.totalCash || 0)}</div>
               <div className="text-sm">Montant locatif</div>
             </div>
           );
@@ -79,7 +87,7 @@ export default function AdminHome({ reportData }) {
       {banksCards.map(({ nom, montant }) => (
         <div key={nom} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
           <div className="font-semibold mb-1">{nom}</div>
-          <div className="text-2xl">{montant}</div>
+          <div className="text-2xl">{formatMoney(montant)}</div>
           <div className="text-sm">Solde banque</div>
         </div>
       ))}
@@ -92,11 +100,11 @@ export default function AdminHome({ reportData }) {
       {lastCompta.plateformes.map(p => (
         <div key={p.nom} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
           <div className="font-semibold mb-1">{p.nom}</div>
-          <div className="text-sm">Fond de caisse: {p.fondDeCaisse}</div>
-          <div className="text-sm">UV dispo: {p.uvDisponible}</div>
-          <div className="text-sm">Total dépôt: {p.totalDepot}</div>
-          <div className="text-sm">Total retrait: {p.totalRetrait}</div>
-          <div className="text-sm">Commission: {p.commission}</div>
+          <div className="text-sm">Fond de caisse: {formatMoney(p.fondDeCaisse)}</div>
+          <div className="text-sm">UV dispo: {formatMoney(p.uvDisponible)}</div>
+          <div className="text-sm">Total dépôt: {formatMoney(p.totalDepot)}</div>
+          <div className="text-sm">Total retrait: {formatMoney(p.totalRetrait)}</div>
+          <div className="text-sm">Commission: {formatMoney(p.commission)}</div>
         </div>
       ))}
     </div>
