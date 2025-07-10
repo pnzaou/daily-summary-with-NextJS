@@ -133,14 +133,37 @@ export const GET = withAuthAndRole(async (req) => {
     const lastCompta = await RapportCompta.findOne().sort({ date: -1 }).lean();
 
     // --- BANQUES : fallback si vide/missing ---
-    let banques = lastCompta?.banques ?? [];
-    if (!banques.length) {
-      banques = await fetchLatestBanques();
+    // Helper: dernier rapport qui contient une banque donnée
+    async function fetchLatestBanqueByName(nom) {
+      const doc = await RapportCompta
+        .findOne({ "banques.nom": nom })
+        .sort({ date: -1 })
+        .lean();
+      return doc?.banques?.find(b => b.nom === nom) || null;
     }
-    const banksCards = banques.map(b => ({
-      nom: b.nom,
-      montant: Number(b.montant),
-    }));
+
+    // --- BANQUES : fallback individuel par banque ---
+    // Récupère la liste de tous les noms de banques disponibles dans les rapports
+    const allBankNames = (await fetchLatestBanques()).map(b => b.nom);
+
+    // Pour chaque nom de banque, on prend la valeur du dernier rapport ou du rapport antérieur le plus récent
+    const banquesResolved = [];
+    for (const name of allBankNames) {
+      // recherche dans le dernier rapport
+      const found = lastCompta?.banques?.find(b => b.nom === name);
+      if (found) {
+        // on accepte même montant à "0"
+        banquesResolved.push({ nom: found.nom, montant: Number(found.montant) });
+      } else {
+        // fallback sur le rapport antérieur
+        const fallback = await fetchLatestBanqueByName(name);
+        if (fallback) {
+          banquesResolved.push({ nom: fallback.nom, montant: Number(fallback.montant) });
+        }
+      }
+    }
+
+    const banksCards = banquesResolved;
 
     // --- CAISSE PRINCIPALE : montant fallback si absent ---
     let caisseMontant = lastCompta?.caissePrincipale?.montant;
