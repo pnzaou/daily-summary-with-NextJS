@@ -6,7 +6,7 @@ import { withAuthAndRole } from "@/utils/withAuthAndRole";
 import { NextResponse } from "next/server";
 import Business from "@/models/Business.Model";
 
-export const GET = async (req) => {
+export const GET = withAuthAndRole(async (req) => {
   try {
     await dbConnection();
 
@@ -282,4 +282,4 @@ export const GET = async (req) => {
       { status: 500 }
     );
   }
-};
+});
