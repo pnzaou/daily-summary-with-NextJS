@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 export default function DebtsPage() {
   const today = new Date().toISOString().split('T')[0];
@@ -27,6 +28,11 @@ export default function DebtsPage() {
 
   return (
     <div className="mt-16 p-4">
+      <Link href="/dashboard">
+          <span className="text-blue-600 dark:text-blue-400 hover:underline">
+            ← Retour
+          </span>
+      </Link>
       <Card className="mb-6">
         <CardHeader className="flex flex-col md:flex-row justify-between items-center gap-4">
           <CardTitle className="text-xl">Liste des dettes & règlements</CardTitle>

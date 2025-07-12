@@ -125,7 +125,7 @@ export const GET = withAuthAndRole(async (req) => {
     }
 
     // --- DailyReports bruts ---
-    const dailyReports = await DailyReport.find({ date: { $gte: startDay } })
+    const dailyReports = await DailyReport.find({ gerant: { $exists: true } })
       .populate("business", "name")
       .lean();
 

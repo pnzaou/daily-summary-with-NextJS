@@ -65,7 +65,7 @@ const Page = async ({ params }) => {
     <div className="mt-16 p-4 max-w-4xl mx-auto space-y-6">
       <Link href="/dashboard">
         <span className="text-blue-600 dark:text-blue-400 hover:underline">
-          ← Retour aux rapports
+          ← Retour
         </span>
       </Link>
 
