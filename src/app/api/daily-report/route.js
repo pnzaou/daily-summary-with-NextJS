@@ -109,7 +109,7 @@ export const POST = withAuth(async (req) => {
   }
 });
 
-export const GET = withAuthAndRole(async (req) => {
+export const GET = withAuth(async (req) => {
     try {
         await dbConnection()
 

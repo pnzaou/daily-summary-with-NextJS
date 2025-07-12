@@ -24,6 +24,7 @@ import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 export default function GerantForm({ business = [], className, ...props }) {
   const methods = useForm({
@@ -126,6 +127,13 @@ export default function GerantForm({ business = [], className, ...props }) {
   return (
     <FormProvider {...methods}>
       <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <div className="fixed top-20 right-4">
+          <Link href="/dashboard/liste-rapport-quincaillerie">
+            <Button>
+              Voir les rapports du jour
+            </Button>
+          </Link>
+        </div>
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Rapport</CardTitle>

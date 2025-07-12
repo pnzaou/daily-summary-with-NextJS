@@ -10,8 +10,6 @@ export const GET = withAuth(async (req, {params}) => {
         await dbConnection()
         const { id } = await params
 
-        console.log("back : ", id)
-
         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
             return NextResponse.json({
                 message: "Veuillez former un ID valide!",

@@ -3,6 +3,8 @@ import DailyReport from '@/models/DailyReport.Model';
 import Business from '@/models/Business.Model';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { getServerSession } from 'next-auth';
+import authOptions from '@/lib/auth';
 
 // Utilitaire pour formater les dates
 const formatDate = (date) => {
@@ -13,18 +15,16 @@ const formatDate = (date) => {
 };
 
 const Page = async () => {
+  const session = await getServerSession(authOptions);
+    if (!session) {
+      redirect("/");
+    }
   // Connexion à la base si nécessaire
   await dbConnection();
 
-  // Calcul des bornes pour la journée en cours
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(startOfDay);
-  endOfDay.setDate(endOfDay.getDate() + 1);
-
   // Récupère uniquement les rapports du jour et populae le nom du business
   const dailyReports = await DailyReport
-    .find({ date: { $gte: startOfDay, $lt: endOfDay } })
+    .find({ gerant: { $exists: true } })
     .populate('business', 'name')
     .lean();
 
@@ -67,9 +67,15 @@ const Page = async () => {
                       : 0)}
                 </td>
                 <td className="px-4 py-2">
-                  <Link href={`/dashboard/rapport/${rep._id}`}> 
+                 {session?.user?.role === "comptable" ? (
+                   <Link href={`/dashboard/rapport/${rep._id}`}> 
                     <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Détails</span>
                   </Link>
+                 ) : (
+                   <Link href={`/dashboard/rapport-update/${rep._id}`}> 
+                    <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Modifier</span>
+                  </Link>
+                 )}
                 </td>
               </tr>
             ))}
