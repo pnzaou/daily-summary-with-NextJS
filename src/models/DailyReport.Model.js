@@ -50,10 +50,12 @@ const DailyReportSchema = new mongoose.Schema(
         total: { type: Number, required: true },
       }
     ],
-    sortieCaisse: { //done
-      type: Number,
-      default: 0,
-    },
+    sortieCaisse: [
+      {
+        description: { type: String, required: true },
+        total: { type: Number, required: true },
+      }
+    ],
     versementTataDiara: { //done
       type: Number,
       default: 0,
