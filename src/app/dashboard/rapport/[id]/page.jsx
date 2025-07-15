@@ -18,7 +18,7 @@ const Page = async ({ params }) => {
     const res = await fetch(`${protocol}://${host}/api/daily-report/${id}`, {
       headers: { cookie },
     });
-    console.log("res: ",res)
+    console.log("res: ", res);
     const json = await res.json();
     report = json.data;
   }
@@ -34,7 +34,9 @@ const Page = async ({ params }) => {
   const formatDate = (iso) => {
     try {
       return new Date(iso).toLocaleDateString("fr-FR", {
-        year: "numeric", month: "long", day: "numeric",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     } catch {
       return "-";
@@ -59,7 +61,8 @@ const Page = async ({ params }) => {
     (report.revenueWave || 0) +
     (report.revenueOrangeMoney || 0);
   const totalDettes = report.debts?.reduce((sum, d) => sum + d.total, 0) || 0;
-  const totalReglements = report.reglementDebts?.reduce((sum, r) => sum + r.total, 0) || 0;
+  const totalReglements =
+    report.reglementDebts?.reduce((sum, r) => sum + r.total, 0) || 0;
 
   return (
     <div className="mt-16 p-4 max-w-4xl mx-auto space-y-6">
@@ -85,9 +88,42 @@ const Page = async ({ params }) => {
             Informations générales
           </h2>
           <div className="space-y-2 text-gray-600 dark:text-gray-400">
-            <p><span className="font-semibold">Activité:</span> {report.business?.name || "-"}</p>
-            <p><span className="font-semibold">Sortie Caisse:</span> {report.sortieCaisse}</p>
-            <p><span className="font-semibold">Versement Tata Diarra:</span> {report.versementTataDiara}</p>
+            <p>
+              <span className="font-semibold">Activité:</span>{" "}
+              {report.business?.name || "-"}
+            </p>
+            <div className="mt-4">
+              <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Sortie de caisse
+              </h3>
+
+              {Array.isArray(report.sortieCaisse) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {report.sortieCaisse.map((s) => (
+                    <div
+                      key={s._id}
+                      className="flex flex-col justify-between bg-white dark:bg-gray-800 p-4 rounded-lg shadow transition-shadow"
+                    >
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {s.description}
+                      </p>
+                      <p className="mt-2 text-lg font-medium text-gray-800 dark:text-gray-100">
+                        {s.total.toLocaleString()} FCFA
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+                  {report.sortieCaisse.toLocaleString()} FCFA
+                </p>
+              )}
+            </div>
+
+            <p>
+              <span className="font-semibold">Versement Tata Diarra:</span>{" "}
+              {report.versementTataDiara}
+            </p>
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
@@ -95,9 +131,17 @@ const Page = async ({ params }) => {
             Résumé des revenus
           </h2>
           <div className="space-y-2 text-gray-600 dark:text-gray-400">
-            <p><span className="font-semibold">Espèces:</span> {report.revenueCash}</p>
-            <p><span className="font-semibold">Wave:</span> {report.revenueWave}</p>
-            <p><span className="font-semibold">Orange Money:</span> {report.revenueOrangeMoney}</p>
+            <p>
+              <span className="font-semibold">Espèces:</span>{" "}
+              {report.revenueCash}
+            </p>
+            <p>
+              <span className="font-semibold">Wave:</span> {report.revenueWave}
+            </p>
+            <p>
+              <span className="font-semibold">Orange Money:</span>{" "}
+              {report.revenueOrangeMoney}
+            </p>
             <p className="mt-2 font-semibold text-gray-800 dark:text-gray-100">
               Total Revenus: {totalRevenus}
             </p>
@@ -108,14 +152,14 @@ const Page = async ({ params }) => {
       {/* Ventes groupées */}
       <section className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <h2 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
-          Ventes 
+          Ventes
         </h2>
         {Object.keys(groupedSales).length > 0 ? (
           <div className="space-y-4">
             {Object.entries(groupedSales).map(([ref, items]) => (
               <div key={ref}>
                 <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                  Réf: {ref} ({items.length} ligne{items.length > 1 ? 's' : ''})
+                  Réf: {ref} ({items.length} ligne{items.length > 1 ? "s" : ""})
                 </h3>
                 <ul className="list-disc list-inside text-gray-600 dark:text-gray-400">
                   {items.map((i) => (
@@ -129,7 +173,9 @@ const Page = async ({ params }) => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400">Aucune vente enregistrée.</p>
+          <p className="text-gray-500 dark:text-gray-400">
+            Aucune vente enregistrée.
+          </p>
         )}
       </section>
 
@@ -144,7 +190,8 @@ const Page = async ({ params }) => {
               {Object.entries(groupedDebts).map(([ref, items]) => (
                 <div key={ref}>
                   <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                    Réf: {ref} ({items.length} ligne{items.length > 1 ? 's' : ''})
+                    Réf: {ref} ({items.length} ligne
+                    {items.length > 1 ? "s" : ""})
                   </h3>
                   <ul className="list-disc list-inside text-gray-600 dark:text-gray-400">
                     {items.map((d) => (
@@ -173,7 +220,8 @@ const Page = async ({ params }) => {
               {Object.entries(groupedReglements).map(([ref, items]) => (
                 <div key={ref}>
                   <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                    Réf: {ref} ({items.length} ligne{items.length > 1 ? 's' : ''})
+                    Réf: {ref} ({items.length} ligne
+                    {items.length > 1 ? "s" : ""})
                   </h3>
                   <ul className="list-disc list-inside text-gray-600 dark:text-gray-400">
                     {items.map((r) => (
