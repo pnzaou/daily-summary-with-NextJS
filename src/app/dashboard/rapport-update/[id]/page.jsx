@@ -46,7 +46,7 @@ export default function EditDailyReport({ business = [] }) {
       revenueCash: 0,
       revenueOrangeMoney: 0,
       revenueWave: 0,
-      sortieCaisse: 0,
+      sortieCaisse: [{ description: "", total: 0 }],
       versementTataDiara: 0,
       sales: [{ ref: "", description: "", total: 0 }],
       debts: [{ ref: "", description: "", total: 0 }],
@@ -69,9 +69,10 @@ export default function EditDailyReport({ business = [] }) {
   const salesArray = useFieldArray({ control, name: "sales" });
   const debtsArray = useFieldArray({ control, name: "debts" });
   const regArray = useFieldArray({ control, name: "reglementDebts" });
+  const sortieArray = useFieldArray({ control, name: "sortieCaisse" });
   const selectedBusiness = watch("business");
 
-  const refValidation = { pattern: /^(facture num \d+|ticket num \d+)$/i };
+  const refValidation = { pattern: /^(facture num \d+|ticket num \d+|reçu num \d+)$/i };
 
   // Charger le rapport existant
   useEffect(() => {
@@ -92,8 +93,10 @@ export default function EditDailyReport({ business = [] }) {
           revenueCash: rpt.revenueCash,
           revenueOrangeMoney: rpt.revenueOrangeMoney,
           revenueWave: rpt.revenueWave,
-          sortieCaisse: rpt.sortieCaisse,
           versementTataDiara: rpt.versementTataDiara,
+          sortieCaisse: rpt.sortieCaisse.length
+            ? rpt.sortieCaisse
+            : [{ description: "", total: 0 }],
           sales: rpt.sales.length
             ? rpt.sales
             : [{ ref: "", description: "", total: 0 }],
@@ -113,7 +116,7 @@ export default function EditDailyReport({ business = [] }) {
   }, [id, reset]);
 
   const onSubmit = async (data) => {
-    if (step < 4) {
+    if (step < 5) {
       setStep((s) => s + 1);
       return;
     }
@@ -140,23 +143,35 @@ export default function EditDailyReport({ business = [] }) {
     }
 
     // Nettoyage
-    const cleanArr = (arr) =>
-      arr
-        .map((i) => ({
-          ref: i.ref.trim(),
-          description: i.description.trim(),
-          total: i.total,
-        }))
-        .filter((i) => i.ref || i.description || i.total);
+    const cleanArr = (arr, hasRef = true) =>
+      (arr || [])
+        .map((item) => {
+          const obj = {
+            description: item.description.trim(),
+            total: item.total,
+          };
+          if (hasRef) obj.ref = item.ref.trim();
+          return obj;
+        })
+        .filter(({ description, total, ref }) =>
+          hasRef
+            ? ref !== "" || description !== "" || total !== ""
+            : description !== "" || total !== ""
+        );
 
-    data.sales = cleanArr(data.sales);
-    data.debts = cleanArr(data.debts);
-    data.reglementDebts = cleanArr(data.reglementDebts);
+    data.sales = cleanArr(data.sales, true);
+    data.debts = cleanArr(data.debts, true);
+    data.reglementDebts = cleanArr(data.reglementDebts, true);
+    data.sortieCaisse = cleanArr(data.sortieCaisse, false);
+
+    ["sales", "debts", "reglementDebts", "sortieCaisse"].forEach((key) => {
+      if (data[key].length === 0) delete data[key];
+    });
 
     setIsSaving(true);
     try {
       await axios.put(`/api/daily-report/${id}`, data);
-      toast.success("Rapport mis à jour !");
+      toast.success(rep.data.message || "Rapport mis à jour !");
       router.push("/dashboard/liste-rapport-quincaillerie");
     } catch (err) {
       console.error(err);
@@ -172,12 +187,12 @@ export default function EditDailyReport({ business = [] }) {
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-6">
-        <Link
-            href="/dashboard/liste-rapport-quincaillerie"
-            className="self-start mb-4"
-        >
+      <Link
+        href="/dashboard/liste-rapport-quincaillerie"
+        className="self-start mb-4"
+      >
         <Button variant="ghost" className="mb-4">
-            ← Retour
+          ← Retour
         </Button>
       </Link>
       <div className="w-full max-w-xl">
@@ -273,16 +288,6 @@ export default function EditDailyReport({ business = [] }) {
                       </div>
                       <div className="flex flex-col md:flex-row justify-between gap-6">
                         <div className="flex-1 grid gap-3">
-                          <Label htmlFor="sortieCaisse">Sortie de caisse</Label>
-                          <Input
-                            id="sortieCaisse"
-                            type="number"
-                            {...register("sortieCaisse", {
-                              valueAsNumber: true,
-                            })}
-                          />
-                        </div>
-                        <div className="flex-1 grid gap-3">
                           <Label htmlFor="versementTataDiara">
                             Somme versée à Tata Diara
                           </Label>
@@ -298,8 +303,63 @@ export default function EditDailyReport({ business = [] }) {
                     </>
                   )}
 
-                  {/* Étape 2: Ventes */}
+                  {/* Étape 2 */}
                   {step === 2 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold">
+                          Sortie de caisse :
+                        </h2>
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            sortieArray.append({ description: "", total: 0 })
+                          }
+                          className="h-8 w-8 p-0 text-lg flex items-center justify-center"
+                        >
+                          +
+                        </Button>
+                      </div>
+                      {sortieArray.fields.map((field, idx) => (
+                        <div
+                          key={field.id}
+                          className="flex items-end space-x-2"
+                        >
+                          <div className="flex-1 grid gap-1">
+                            <Label htmlFor={`sortieCaisse.${idx}.description`}>
+                              Description
+                            </Label>
+                            <Input
+                              id={`sortieCaisse.${idx}.description`}
+                              type="text"
+                              {...register(`sortieCaisse.${idx}.description`)}
+                            />
+                          </div>
+                          <div className="w-32 grid gap-1">
+                            <Label htmlFor={`sortieCaisse.${idx}.total`}>
+                              Total
+                            </Label>
+                            <Input
+                              id={`sortieCaisse.${idx}.total`}
+                              type="number"
+                              {...register(`sortieCaisse.${idx}.total`, {
+                                valueAsNumber: true,
+                              })}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => sortieArray.remove(idx)}
+                          >
+                            –
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Étape 3: Ventes */}
+                  {step === 3 && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">
@@ -363,8 +423,8 @@ export default function EditDailyReport({ business = [] }) {
                     </div>
                   )}
 
-                  {/* Étape 3: Dettes */}
-                  {step === 3 && (
+                  {/* Étape 4: Dettes */}
+                  {step === 4 && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">Dettes client</h2>
@@ -426,8 +486,8 @@ export default function EditDailyReport({ business = [] }) {
                     </div>
                   )}
 
-                  {/* Étape 4: Règlement dettes */}
-                  {step === 4 && (
+                  {/* Étape 5: Règlement dettes */}
+                  {step === 5 && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">
@@ -512,7 +572,7 @@ export default function EditDailyReport({ business = [] }) {
                       </Button>
                     )}
                     <Button type="submit">
-                      {step < 4 ? (
+                      {step < 5 ? (
                         "Suivant"
                       ) : isSaving ? (
                         <span className="animate-spin h-4 w-4 border-2 border-white border-r-transparent rounded-full"></span>
