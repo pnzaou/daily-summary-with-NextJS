@@ -86,7 +86,7 @@ export default function GerantForm({ business = [], className, ...props }) {
       else if (!debtsOk) setStep(3);
       else setStep(4);
 
-      toast.error("Chaque référence doit être au format 'facture num XXXX' ou 'ticket num XXXX'.")
+      toast.error("Chaque référence doit être au format 'facture num XXXX', 'ticket num XXXX' ou 'reçu num XXXX'.")
       return;
     }
 
