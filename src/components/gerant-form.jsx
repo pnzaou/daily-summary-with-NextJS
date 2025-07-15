@@ -33,7 +33,7 @@ export default function GerantForm({ business = [], className, ...props }) {
       revenueCash: 0,
       revenueOrangeMoney: 0,
       revenueWave: 0,
-      sortieCaisse: 0,
+      sortieCaisse: [{ description: "", total: 0 }],
       versementTataDiara: 0,
       sales: [{ ref: "", description: "", total: "" }],
       debts: [{ ref: "", description: "", total: "" }],
@@ -59,6 +59,7 @@ export default function GerantForm({ business = [], className, ...props }) {
   const salesArray = useFieldArray({ control, name: "sales" });
   const debtsArray = useFieldArray({ control, name: "debts" });
   const regDebtsArray = useFieldArray({ control, name: "reglementDebts" });
+  const sortieArray = useFieldArray({ control, name: "sortieCaisse" });
 
   const selectedBusiness = watch("business");
 
@@ -68,7 +69,7 @@ export default function GerantForm({ business = [], className, ...props }) {
 
   const onSubmit = async (data) => {
     // If not final step, validate refs then go to next
-    if (step < 4) {
+    if (step < 5) {
       setStep((s) => s + 1);
       return;
     }
@@ -89,25 +90,30 @@ export default function GerantForm({ business = [], className, ...props }) {
     }
 
     // Final submission
-    const clean = (arr) => 
+    const clean = (arr, hasRef = true) =>
       (arr || [])
-        .map((item) => ({
-          ref: item.ref.trim(),
-          description: item.description.trim(),
-          total: item.total
-        }))
-        .filter(
-          ({ ref, description, total }) => 
-            ref !== "" || description !== "" || total !== ""
+        .map((item) => {
+          const obj = {
+            description: item.description.trim(),
+            total: item.total,
+          };
+          if (hasRef) obj.ref = item.ref.trim();
+          return obj;
+        })
+        .filter(({ description, total, ref }) =>
+          hasRef
+            ? ref !== "" || description !== "" || total !== ""
+            : description !== "" || total !== ""
         );
     
-    data.sales = clean(data.sales);
-    data.debts = clean(data.debts);
-    data.reglementDebts = clean(data.reglementDebts);
+    data.sales = clean(data.sales, true);
+    data.debts = clean(data.debts, true);
+    data.reglementDebts = clean(data.reglementDebts, true);
+    data.sortieCaisse = clean(data.sortieCaisse, false);
 
-    if(data.sales.length === 0) delete data.sales;
-    if(data.debts.length === 0) delete data.debts;
-    if(data.reglementDebts.length === 0) delete data.reglementDebts;
+    ["sales", "debts", "reglementDebts", "sortieCaisse"].forEach((key) => {
+      if (data[key].length === 0) delete data[key];
+    })
 
     setIsLoading(true);
     try {
@@ -220,14 +226,6 @@ export default function GerantForm({ business = [], className, ...props }) {
                     </div>
                     <div className="flex flex-col md:flex-row justify-between gap-6">
                       <div className="grid gap-3 flex-1">
-                        <Label htmlFor="sortieCaisse">Sortie de Caisse</Label>
-                        <Input
-                          id="sortieCaisse"
-                          type="number"
-                          {...register("sortieCaisse")}
-                        />
-                      </div>
-                      <div className="grid gap-3 flex-1">
                         <Label htmlFor="versementTataDiara">
                           Somme versée à Tata Diara
                         </Label>
@@ -241,8 +239,46 @@ export default function GerantForm({ business = [], className, ...props }) {
                   </>
                 )}
 
-                {/* Step 2: Ventes */}
+                {/* Step 2: Sortie de caisse */}
                 {step === 2 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold">Sortie de caisse :</h2>
+                      <Button
+                        type="button"
+                        onClick={() => sortieArray.append({ description: "", total: 0 })}
+                        className="h-8 w-8 p-0 text-lg flex items-center justify-center"
+                      >
+                        +
+                      </Button>
+                    </div>
+                    {sortieArray.fields.map((field, idx) => (
+                      <div key={field.id} className="flex items-end space-x-2">
+                        <div className="flex-1 grid gap-1">
+                          <Label htmlFor={`sortieCaisse.${idx}.description`}>Description</Label>
+                          <Input
+                            id={`sortieCaisse.${idx}.description`}
+                            type="text"
+                            {...register(`sortieCaisse.${idx}.description`)}
+                          />
+                        </div>
+                        <div className="w-32 grid gap-1">
+                          <Label htmlFor={`sortieCaisse.${idx}.total`}>Total</Label>
+                          <Input
+                            id={`sortieCaisse.${idx}.total`}
+                            type="number"
+                            {...register(`sortieCaisse.${idx}.total`, { valueAsNumber: true })}
+                          />
+                        </div>
+                        <Button type="button" onClick={() => sortieArray.remove(idx)}>–</Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+
+                {/* Step 3: Ventes */}
+                {step === 3 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-semibold">
@@ -307,8 +343,8 @@ export default function GerantForm({ business = [], className, ...props }) {
                   </div>
                 )}
 
-                {/* Step 3: Dettes */}
-                {step === 3 && (
+                {/* Step 4: Dettes */}
+                {step === 4 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-semibold">Dettes client :</h2>
@@ -369,8 +405,8 @@ export default function GerantForm({ business = [], className, ...props }) {
                   </div>
                 )}
 
-                {/* Step 4: Règlement dettes */}
-                {step === 4 && (
+                {/* Step 5: Règlement dettes */}
+                {step === 5 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-semibold">
@@ -451,9 +487,9 @@ export default function GerantForm({ business = [], className, ...props }) {
                       Précédent
                     </Button>
                   )}
-                  {step <= 4 && (
+                  {step <= 5 && (
                     <Button type="submit">
-                      {step === 4 
+                      {step === 5 
                       ? (isLoading 
                           ? (<>
                             <span className="w-4 h-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent"></span> Enregistrement...
