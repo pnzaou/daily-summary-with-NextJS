@@ -127,6 +127,8 @@ export const GET = withAuthAndRole(async (req) => {
     // --- DailyReports bruts ---
     const dailyReports = await DailyReport.find({ gerant: { $exists: true } })
       .populate("business", "name")
+      .sort({ date: -1 })
+      .limit(5)
       .lean();
 
     // --- Dernier rapport compta brut ---
