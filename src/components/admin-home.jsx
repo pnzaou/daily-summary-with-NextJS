@@ -159,7 +159,7 @@ export default function AdminHome({ reportData }) {
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Date</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Activité</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Ventes</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Total Cash</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Revenu total</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Actions</th>
             </tr>
           </thead>
@@ -175,7 +175,7 @@ export default function AdminHome({ reportData }) {
                 </td>
                 <td className="px-4 py-2">{rep.sales?.length ?? "-"}</td>
                 <td className="px-4 py-2">
-                  {rep.revenueCash ?? (rep.banques ? rep.banques.reduce((s, b) => s + Number(b.montant), 0) : 0)}
+                  {rep.revenueCash + rep.revenueOrangeMoney + rep.revenueWave}
                 </td>
                 <td className="px-4 py-2">
                   <Link href={`/dashboard/rapport/${rep._id}`}> 
