@@ -64,7 +64,8 @@ export default function GerantForm({ business = [], className, ...props }) {
   const selectedBusiness = watch("business");
 
   const refValidation = {
-      pattern: /^(facture num \d+|ticket num \d+)$/i,
+      pattern: /^(facture num \d+|ticket num \d+|reçu num \d+)$/i,
+
   };
 
   const onSubmit = async (data) => {
