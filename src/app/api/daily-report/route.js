@@ -2,7 +2,6 @@ import authOptions from "@/lib/auth"
 import dbConnection from "@/lib/db"
 import DailyReport from "@/models/DailyReport.Model"
 import { withAuth } from "@/utils/withAuth"
-import { withAuthAndRole } from "@/utils/withAuthAndRole"
 import mongoose from "mongoose"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
@@ -29,7 +28,7 @@ export const POST = withAuth(async (req) => {
       debts = [],
       reglementDebts = [],
       sales = [],
-      sortieCaisse = 0,
+      sortieCaisse = [],
       versementTataDiara = 0,
     } = await req.json();
 
@@ -58,9 +57,22 @@ export const POST = withAuth(async (req) => {
         );
     }
 
+    function cleanSortie(arr) {
+      return (Array.isArray(arr) ? arr : [])
+        .map((item) => ({
+          description: (item.description || "").trim(),
+          total:       Number(item.total) || 0,
+        }))
+        .filter(
+          ({ description, total }) =>
+            description !== "" || total > 0
+        );
+    }
+
     const cleanSales = cleanArray(sales);
     const cleanDebts = cleanArray(debts);
     const cleanRegs  = cleanArray(reglementDebts);
+    const cleanSortieCaisse = cleanSortie(sortieCaisse);
 
     // reglements groupés par ref
     const regsByRef = cleanRegs.reduce((map, { ref, total }) => {
@@ -87,7 +99,7 @@ export const POST = withAuth(async (req) => {
       sales:              cleanSales,
       debts:              finalDebts,
       reglementDebts:     cleanRegs,
-      sortieCaisse:       Number(sortieCaisse),
+      sortieCaisse:       cleanSortieCaisse,
       versementTataDiara: Number(versementTataDiara),
     });
 
