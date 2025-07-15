@@ -41,7 +41,7 @@ export default function AdminHome({ reportData }) {
         <h3 className="col-span-full text-xl font-semibold">{title}</h3>
         {periods.map((p) => {
           const t = periodTotals[p] || {};
-          const incoming = (t.totalCash || 0) + (t.totalOM || 0) + (t.totalWave || 0) + (t.totalRegDebts || 0);
+          const incoming = (t.totalCash || 0) + (t.totalOM || 0) + (t.totalWave || 0);
           return (
             <div key={p} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
               <div className="text-lg font-semibold mb-1">{labels[p]}</div>
