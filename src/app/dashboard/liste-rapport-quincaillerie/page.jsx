@@ -26,6 +26,7 @@ const Page = async () => {
   const dailyReports = await DailyReport
     .find({ gerant: { $exists: true } })
     .populate('business', 'name')
+    .sort({ date: -1 })
     .lean();
 
   return (

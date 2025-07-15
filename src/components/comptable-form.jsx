@@ -74,7 +74,7 @@ export default function RapportFormCompta({ business = [], className, ...props }
         <div className="fixed top-20 right-4">
           <Link href="/dashboard/liste-rapport-quincaillerie">
             <Button>
-              Voir les rapports du jour
+              Voir les rapports
             </Button>
           </Link>
         </div>
