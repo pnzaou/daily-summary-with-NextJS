@@ -1,6 +1,7 @@
 // components/AdminHome.jsx
 import React from "react";
 import Link from "next/link";
+import { SquareArrowOutUpRight, SquareArrowOutUpRightIcon } from "lucide-react";
 
 /**
  * AdminHome
@@ -65,18 +66,30 @@ export default function AdminHome({ reportData }) {
     const periods = ["day", "month", "year"];
     const labels = { day: "Aujourd'hui", month: "Ce mois", year: "Cette année" };
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <h3 className="col-span-full text-xl font-semibold">Appartements / Véhicules</h3>
-        {periods.map((p) => {
-          const t = drTotals.locations[p] || {};
-          return (
-            <div key={p} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
-              <div className="text-lg font-semibold mb-1">{labels[p]}</div>
-              <div className="text-2xl">{formatMoney(t.totalCash || 0)}</div>
-              <div className="text-sm">Montant locatif</div>
-            </div>
-          );
-        })}
+      <div>
+        <div className="flex gap-3">
+          <h3 className="col-span-full text-xl font-semibold">
+            Appartements / Véhicules
+          </h3>
+          <Link href="/location/détails" className="text-blue-500 hover:text-blue-600">
+            <SquareArrowOutUpRightIcon size={15} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {periods.map((p) => {
+            const t = drTotals.locations[p] || {};
+            return (
+              <div
+                key={p}
+                className="bg-white dark:bg-gray-800 shadow rounded-lg p-4"
+              >
+                <div className="text-lg font-semibold mb-1">{labels[p]}</div>
+                <div className="text-2xl">{formatMoney(t.totalCash || 0)}</div>
+                <div className="text-sm">Montant locatif</div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
