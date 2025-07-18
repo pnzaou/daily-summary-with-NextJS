@@ -58,3 +58,71 @@ export const GET = withAuth(async (req, {params}) => {
         }, { status: 500 })
     }
 })
+
+export const PUT = withAuth(async (req, {params}) => {
+    try {
+        await dbConnection()
+        const { id } = await params
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return NextResponse.json({
+                message: "Veuillez former un ID valide!",
+                success: false,
+                error: true
+            }, { status: 400 })
+        }
+
+        const body = await req.json()
+        const {
+            sales,
+            revenueCash,
+            revenueOrangeMoney,
+            revenueWave,
+            debts,
+            reglementDebts,
+            sortieCaisse,
+            versementTataDiara,
+            date
+        } = body
+
+        const report = await DailyReport.findById(id);
+        if (!report) {
+            return NextResponse.json(
+                {
+                message: "Rapport introuvable.",
+                success: false,
+                error: true,
+                },
+                { status: 404 }
+            );
+        }
+
+        if(body.hasOwnProperty("sales")) report.sales = sales
+        if(body.hasOwnProperty("debts")) report.debts = debts
+        if(body.hasOwnProperty("reglementDebts")) report.reglementDebts = reglementDebts
+        if(body.hasOwnProperty("sortieCaisse")) report.sortieCaisse = sortieCaisse 
+
+        if(body.hasOwnProperty("revenueCash") && typeof revenueCash === "number") report.revenueCash = revenueCash
+        if(body.hasOwnProperty("revenueOrangeMoney") && typeof revenueOrangeMoney === "number") report.revenueOrangeMoney = revenueOrangeMoney
+        if(body.hasOwnProperty("revenueWave") && typeof revenueWave === "number") report.revenueWave = revenueWave
+        if(body.hasOwnProperty("versementTataDiara") && typeof versementTataDiara === "number") report.versementTataDiara = versementTataDiara
+
+        if(date) report.date = new Date(date)
+
+        const updatedReport = await report.save()
+        return NextResponse.json({
+            message: "Rapport mis à jour avec succès!",
+            success: true,
+            error: false,
+            data: updatedReport
+        }, { status: 200 })
+
+    } catch (error) {
+        console.error("Erreur lors de la modification du rapport: ", error)
+        return NextResponse.json({
+            message: "Erreur! Veuillez réessayer.",
+            success: false,
+            error: true
+        }, { status: 500 })
+    }
+})
