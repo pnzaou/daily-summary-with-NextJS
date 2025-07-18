@@ -13,36 +13,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
-export default function EditDailyReport({ business = [] }) {
+export default function EditDailyReport() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [businessName, setBusinessName] = useState("")
 
   const methods = useForm({
     defaultValues: {
       business: "",
+      date: "",
       revenueCash: 0,
       revenueOrangeMoney: 0,
       revenueWave: 0,
@@ -60,7 +48,6 @@ export default function EditDailyReport({ business = [] }) {
     control,
     handleSubmit,
     setValue,
-    watch,
     trigger,
     reset,
     formState: { errors },
@@ -70,7 +57,6 @@ export default function EditDailyReport({ business = [] }) {
   const debtsArray = useFieldArray({ control, name: "debts" });
   const regArray = useFieldArray({ control, name: "reglementDebts" });
   const sortieArray = useFieldArray({ control, name: "sortieCaisse" });
-  const selectedBusiness = watch("business");
 
   const refValidation = { pattern: /^(facture num \d+|ticket num \d+|reçu num \d+)$/i };
 
@@ -80,16 +66,18 @@ export default function EditDailyReport({ business = [] }) {
     axios
       .get(`/api/daily-report/${id}`)
       .then(({ data }) => {
-        console.log(data);
         if (!data.success) {
-          console.log("Je suis ici");
           toast.error(data.message || "Impossible de charger le rapport.");
           return;
         }
         const rpt = data.data;
-        console.log(rpt);
+        setBusinessName(rpt.business.name)
+        const formattedDate = new Date(rpt.date)
+          .toISOString()
+          .split("T")[0];
         reset({
           business: rpt.business._id || rpt.business,
+          date: formattedDate,
           revenueCash: rpt.revenueCash,
           revenueOrangeMoney: rpt.revenueOrangeMoney,
           revenueWave: rpt.revenueWave,
@@ -164,13 +152,10 @@ export default function EditDailyReport({ business = [] }) {
     data.reglementDebts = cleanArr(data.reglementDebts, true);
     data.sortieCaisse = cleanArr(data.sortieCaisse, false);
 
-    ["sales", "debts", "reglementDebts", "sortieCaisse"].forEach((key) => {
-      if (data[key].length === 0) delete data[key];
-    });
-
     setIsSaving(true);
     try {
-      await axios.put(`/api/daily-report/${id}`, data);
+      console.log(data)
+      const rep = await axios.put(`/api/daily-report/${id}`, data);
       toast.success(rep.data.message || "Rapport mis à jour !");
       router.push("/dashboard/liste-rapport-quincaillerie");
     } catch (err) {
@@ -183,7 +168,11 @@ export default function EditDailyReport({ business = [] }) {
     }
   };
 
-  if (loading) return <p>Chargement...</p>;
+  if (loading) return (
+    <div className="h-screen w-full flex items-center justify-center">
+      <p>Chargement...</p>
+    </div>
+  );
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-6">
@@ -210,47 +199,28 @@ export default function EditDailyReport({ business = [] }) {
                   {/* Étape 1 */}
                   {step === 1 && (
                     <>
-                      <div className="flex flex-col md:flex-row justify-between gap-6">
+                      <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
+                        <div className="flex-1 grid gap-3">
+                          <Label htmlFor="date">Date du rapport</Label>
+                          <Input
+                            id="date"
+                            type="date"
+                            {...register("date", { required: true })}
+                          />
+                        </div>
                         <div className="flex-1 grid gap-3">
                           <Label htmlFor="business">Activité</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full text-left"
-                              >
-                                {business.find((b) => b.id === selectedBusiness)
-                                  ?.name || "Sélectionner l'activité"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent>
-                              <Command>
-                                <CommandInput placeholder="Rechercher..." />
-                                <CommandEmpty>Aucune activité.</CommandEmpty>
-                                <CommandGroup>
-                                  {business.map((b) => (
-                                    <CommandItem
-                                      key={b.id}
-                                      onSelect={() =>
-                                        setValue("business", b.id)
-                                      }
-                                    >
-                                      {b.name}
-                                      {selectedBusiness === b.id && (
-                                        <Check className="ml-auto" />
-                                      )}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                          {errors.business && (
-                            <p className="text-red-500">
-                              Veuillez sélectionner une activité.
-                            </p>
-                          )}
+                          <Input id="business" value={businessName} readOnly />
+
+
+                          {/* Valeur réelle soumise par le formulaire */}
+                          <input
+                          type="hidden"
+                            {...register("business", { required: true })} 
+                          />
                         </div>
+                      </div>
+                      <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
                         <div className="flex-1 grid gap-3">
                           <Label htmlFor="revenueCash">Revenu en espèces</Label>
                           <Input
@@ -261,8 +231,6 @@ export default function EditDailyReport({ business = [] }) {
                             })}
                           />
                         </div>
-                      </div>
-                      <div className="flex flex-col md:flex-row justify-between gap-6">
                         <div className="flex-1 grid gap-3">
                           <Label htmlFor="revenueOrangeMoney">
                             Revenu Orange Money
@@ -275,6 +243,8 @@ export default function EditDailyReport({ business = [] }) {
                             })}
                           />
                         </div>
+                      </div>
+                      <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
                         <div className="flex-1 grid gap-3">
                           <Label htmlFor="revenueWave">Revenu Wave</Label>
                           <Input
@@ -285,8 +255,6 @@ export default function EditDailyReport({ business = [] }) {
                             })}
                           />
                         </div>
-                      </div>
-                      <div className="flex flex-col md:flex-row justify-between gap-6">
                         <div className="flex-1 grid gap-3">
                           <Label htmlFor="versementTataDiara">
                             Somme versée à Tata Diara
