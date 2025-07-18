@@ -22,12 +22,18 @@ const Page = async () => {
   // Connexion à la base si nécessaire
   await dbConnection();
 
+  const isGerant = session.user.role === "gerant";
+  const query = isGerant
+    ? { gerant: session.user.id }
+    : { gerant: { $exists: true } };
+
   // Récupère uniquement les rapports du jour et populae le nom du business
   const dailyReports = await DailyReport
-    .find({ gerant: { $exists: true } })
+    .find(query)
     .populate('business', 'name')
     .sort({ date: -1 })
     .lean();
+    
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
