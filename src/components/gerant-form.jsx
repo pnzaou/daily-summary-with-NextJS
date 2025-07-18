@@ -137,7 +137,7 @@ export default function GerantForm({ business = [], className, ...props }) {
         <div className="fixed top-20 right-4">
           <Link href="/dashboard/liste-rapport-quincaillerie">
             <Button>
-              Voir les rapports du jour
+              Voir mes rapports
             </Button>
           </Link>
         </div>
