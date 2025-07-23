@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { useSession } from 'next-auth/react';
 
 export default function DetteList() {
+  const { data: session, status } = useSession()
+  console.log("session :",session, "status :",status)
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('all');
@@ -97,7 +100,9 @@ export default function DetteList() {
                     <th className="px-4 py-2 text-left text-sm font-medium">Description</th>
                     <th className="px-4 py-2 text-left text-sm font-medium">Montant</th>
                     <th className="px-4 py-2 text-left text-sm font-medium">Statut</th>
-                    <th className="px-4 py-2 text-left text-sm font-medium">Action</th>
+                    {session?.user?.role === 'comptable' && (
+                      <th className="px-4 py-2 text-left text-sm font-medium">Action</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -107,11 +112,13 @@ export default function DetteList() {
                       <td className="px-4 py-2 text-sm">{item.description}</td>
                       <td className="px-4 py-2 text-sm font-medium">{item.montant}</td>
                       <td className="px-4 py-2 text-sm">{item.status}</td>
-                      <td className="px-4 py-2 text-sm">
-                        <Button size="sm" onClick={() => handleToggle(item)}>
-                          {item.status === 'impayée' ? 'Marquer comme payée' : 'Marquer comme impayée'}
-                        </Button>
-                      </td>
+                      {session?.user?.role === 'comptable' && (
+                        <td className="px-4 py-2 text-sm">
+                          <Button size="sm" onClick={() => handleToggle(item)}>
+                            {item.status === 'impayée' ? 'Marquer comme payée' : 'Marquer comme impayée'}
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
