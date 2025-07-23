@@ -18,7 +18,7 @@ const Pages = async () => {
     }
     await dbConnection()
     let business = []
-    let daisyReport = {}
+    let dailyReport = {}
 
     if (session?.user?.role === "admin") {
         const { cookie, host, protocol } = await preparingServerSideRequest()
@@ -29,7 +29,7 @@ const Pages = async () => {
         })
 
         const { data } = await res.json()
-        daisyReport = data
+        dailyReport = data
     }
 
     if (session?.user?.role === "gerant" || session?.user?.role === "comptable") {
@@ -54,7 +54,7 @@ const Pages = async () => {
             <Header userName={session.user.name} />
             {session?.user?.role === "admin" &&
              (<>
-                <AdminHome reportData={ daisyReport }/>
+                <AdminHome reportData={ dailyReport }/>
             </>)}
             {session?.user?.role === "gerant" && (
                 <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-0">

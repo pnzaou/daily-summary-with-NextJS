@@ -95,7 +95,7 @@ export default function AdminHome({ reportData }) {
   };
 
   const renderBankCards = () => (
-    <div className="grid grid-cols-3 gap-4 mb-6">
+    <div className="grid md:grid-cols-3 gap-4 mb-6">
       <h3 className="col-span-full text-xl font-semibold">Banques (dernier rapport compta)</h3>
       {banksCards.map(({ nom, montant }) => (
         <div key={nom} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">

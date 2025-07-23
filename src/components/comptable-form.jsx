@@ -71,10 +71,20 @@ export default function RapportFormCompta({ business = [], className, ...props }
   return (
     <FormProvider {...methods}>
       <div className={cn("flex flex-col gap-6", className)} {...props}>
-        <div className="fixed top-20 right-4">
+        <div className="flex flex-wrap gap-4 fixed top-20 md:right-4">
+          <Link href="/dashboard/dash-compta">
+            <Button>
+              dernier rapport
+            </Button>
+          </Link>
           <Link href="/dashboard/liste-rapport-quincaillerie">
             <Button>
-              Voir les rapports
+              Quincaillerie
+            </Button>
+          </Link>
+          <Link href="/dashboard/gestion-dettes">
+            <Button>
+              Dettes
             </Button>
           </Link>
         </div>
