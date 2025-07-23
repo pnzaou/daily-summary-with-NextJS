@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export const PATCH = withAuth(async (req) => {
   try {
-    const { rapportId, detteId, type } = await request.json();
+    const { rapportId, detteId, type } = await req.json();
     await dbConnection();
 
     const rapport = await RapportCompta.findById(rapportId);
@@ -42,7 +42,7 @@ export const PATCH = withAuth(async (req) => {
     await rapport.save();
 
     return NextResponse.json({ success: true, newStatus: subDoc.status });
-    
+
   } catch (error) {
     console.error("Erreur PATCH /api/dettes/toggle:", error);
     return NextResponse.json(
