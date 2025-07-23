@@ -81,7 +81,7 @@ export default function DetteList() {
             <SelectContent>
               <SelectItem value="all">Tous</SelectItem>
               <SelectItem value="global">Dette</SelectItem>
-              <SelectItem value="plateforme">Dette plateforme</SelectItem>
+              <SelectItem value="plateforme">Dette plateforme de transfert</SelectItem>
             </SelectContent>
           </Select>
         </CardHeader>
