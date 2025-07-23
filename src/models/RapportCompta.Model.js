@@ -5,6 +5,12 @@ const TransactionSchema = new mongoose.Schema({
     montant: Number
 })
 
+const transacObj = TransactionSchema.obj;
+const DetTransactionSchema = new mongoose.Schema(transacObj)
+DetTransactionSchema.add({
+    status: { type: String, enum: ["impayée", "payée"], default: "impayée" }
+})
+
 const PlateformeSchema = new mongoose.Schema({
     nom: String,
     fondDeCaisse: Number,
@@ -14,7 +20,7 @@ const PlateformeSchema = new mongoose.Schema({
     totalRetrait: Number,
     commission: Number,
     disponibilites: Number,
-    dettes: [TransactionSchema],
+    dettes: [DetTransactionSchema],
 })
 
 const BanqueSchema = new mongoose.Schema({
@@ -37,7 +43,7 @@ const RapportSchema = new mongoose.Schema({
         sorties: [TransactionSchema]
     },
     plateformes: [PlateformeSchema],
-    dettes: [TransactionSchema]
+    dettes: [DetTransactionSchema]
 })
 
 const RapportCompta = mongoose.models.RapportCompta || mongoose.model("RapportCompta", RapportSchema)
