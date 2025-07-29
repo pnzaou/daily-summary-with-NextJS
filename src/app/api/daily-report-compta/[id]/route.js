@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 
 export const GET = withAuthAndRole(async (req, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({
         error: true,

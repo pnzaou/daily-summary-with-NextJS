@@ -43,6 +43,8 @@ export default function ComptaDetailPage() {
     fetchDetail()
   }, [status, params.id])
 
+  console.log(data)
+
   // 4. Rendus conditionnels après tous les Hooks
   if (status === 'loading') {
     return (
@@ -128,6 +130,7 @@ export default function ComptaDetailPage() {
         <CardHeader>
           <CardTitle>Détails Rapport Comptable</CardTitle>
           <p className="text-sm text-gray-500">Date : {new Date(date).toLocaleDateString('fr-FR')}</p>
+          <h3 className="font-semibold mt-4">Caisse Principale : <span className="text-sm text-gray-500">{caissePrincipale.montant}</span></h3>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -147,7 +150,7 @@ export default function ComptaDetailPage() {
           </div>
 
           <div>
-            <h3 className="font-semibold">Caisse Principale</h3>
+            <h3 className="font-semibold">Flux</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
               <Card>
                 <CardHeader>

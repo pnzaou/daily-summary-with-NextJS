@@ -39,6 +39,17 @@ export const GET = withAuth(async (req) => {
       return doc?.plateformes?.find(p => p.nom === nom) || null;
     }
 
+    // Helper : dernière commission définie pour une plateforme
+    async function fetchLatestCommissionByName(nom) {
+      const doc = await RapportCompta
+        .findOne({ "plateformes.nom": nom, "plateformes.commission": { $exists: true } })
+        .sort({ date: -1 })
+        .lean();
+      // On extrait la plateforme correspondante
+      const plat = doc?.plateformes?.find(p => p.nom === nom && p.commission != null);
+      return plat?.commission ?? null;
+    }
+
     // --- bornes temporelles ---
     const now = new Date();
     const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -140,7 +151,7 @@ export const GET = withAuth(async (req) => {
         .sort({ date: -1 })
         .lean();
       return doc?.banques?.find(b => b.nom === nom) || null;
-     }
+    }
 
     // 1) récupère **tous** les noms de banques
     const allBankNames = await RapportCompta.distinct("banques.nom");
@@ -178,22 +189,32 @@ export const GET = withAuth(async (req) => {
     ];
     const plateformes = await Promise.all(
       platformNames.map(async (nom) => {
+        // on cherche d'abord dans le tout dernier rapport
         let p = lastCompta?.plateformes?.find(p => p.nom === nom);
+        // si la plateforme n'existe pas dans le dernier rapport,
+        // on la récupère via le fallback historique
         if (!p) {
           p = await fetchLatestPlateformeByName(nom);
         }
-        return p
-          ? {
-              nom: p.nom,
-              commission: p.commission,
-              fondDeCaisse: p.fondDeCaisse,
-              uvDisponible: p.uvDisponible,
-              rechargeUV: p.rechargeUV,
-              totalDepot: p.totalDepot,
-              totalRetrait: p.totalRetrait,
-              disponibilites: p.disponibilites
-            }
-          : null;
+        if (!p) {
+          // si aucune occurrence : on skip ce nom
+          return null;
+        }
+        // Si commission absente dans p, on va chercher la dernière commission dispo
+        let commission = p.commission;
+        if (commission == null) {
+          commission = await fetchLatestCommissionByName(nom);
+        }
+        return {
+          nom:           p.nom,
+          commission,                // désormais toujours défini ou null
+          fondDeCaisse: p.fondDeCaisse,
+          uvDisponible: p.uvDisponible,
+          rechargeUV:   p.rechargeUV,
+          totalDepot:   p.totalDepot,
+          totalRetrait: p.totalRetrait,
+          disponibilites: p.disponibilites
+        };
       })
     );
     const plateformesClean = plateformes.filter(Boolean);
