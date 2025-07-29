@@ -14,10 +14,21 @@ import { useSession } from 'next-auth/react'
 export default function ComptaDetailPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  if (status !== 'authenticated') {
-    router.push('/')
-    return null
+  useEffect(() => {
+    if (status !== 'authenticated') {
+      router.push('/')
+      return null
+    }
+  }, [status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="mt-16 p-4">
+        <p className="text-gray-500">Vérification de la session…</p>
+      </div>
+    );
   }
+  
   const params = useParams()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
