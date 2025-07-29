@@ -9,16 +9,37 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function DebtsPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  // 1. Hooks en haut, toujours dans le même ordre
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
+  // 2. États locaux
+  const today = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 3. Redirection si non authentifié
   useEffect(() => {
-    if (status !== 'authenticated') {
-      router.push('/')
-      return null
+    if (status === 'unauthenticated') {
+      router.push('/');
     }
-  }, [status, router])
+  }, [status, router]);
 
+  // 4. Chargement des données quand on est authentifié et que les dates changent
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    setLoading(true);
+    fetch(`/api/debts?start=${startDate}&end=${endDate}`)
+      .then(res => res.json())
+      .then(json => setData(json.data || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [status, startDate, endDate]);
+
+  // 5. Rendus conditionnels
   if (status === 'loading') {
     return (
       <div className="mt-16 p-4">
@@ -26,33 +47,20 @@ export default function DebtsPage() {
       </div>
     );
   }
-  
-  const today = new Date().toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  if (status === 'unauthenticated') {
+    // on attend la redirection du useEffect
+    return null;
+  }
 
-  const fetchData = () => {
-    setLoading(true);
-    fetch(`/api/debts?start=${startDate}&end=${endDate}`)
-      .then(res => res.json())
-      .then(json => setData(json.data || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
+  // 6. Rendu quand authenticated
   return (
     <div className="mt-16 p-4">
       <Link href="/dashboard">
-          <span className="text-blue-600 dark:text-blue-400 hover:underline">
-            ← Retour
-          </span>
+        <span className="text-blue-600 dark:text-blue-400 hover:underline">
+          ← Retour
+        </span>
       </Link>
+
       <Card className="mb-6">
         <CardHeader className="flex flex-col md:flex-row justify-between items-center gap-4">
           <CardTitle className="text-xl">Liste des dettes & règlements</CardTitle>
@@ -75,9 +83,12 @@ export default function DebtsPage() {
                 onChange={e => setEndDate(e.target.value)}
               />
             </div>
-            <Button onClick={fetchData} className="mt-2 sm:mt-6">Filtrer</Button>
+            <Button onClick={() => {/* facultatif, l'effet relance fetch */}} className="mt-2 sm:mt-6">
+              Filtrer
+            </Button>
           </div>
         </CardHeader>
+
         <CardContent>
           {loading ? (
             <p className="text-gray-500">Chargement...</p>

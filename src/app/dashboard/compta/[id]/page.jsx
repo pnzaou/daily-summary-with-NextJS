@@ -2,44 +2,36 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useParams } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useSession } from 'next-auth/react'
+import { useRouter, useParams } from 'next/navigation'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 export default function ComptaDetailPage() {
+  // 1. Tous les Hooks en haut, dans un ordre fixe
   const { data: session, status } = useSession()
   const router = useRouter()
-  useEffect(() => {
-    if (status !== 'authenticated') {
-      router.push('/')
-      return null
-    }
-  }, [status, router])
-
-  if (status === 'loading') {
-    return (
-      <div className="mt-16 p-4">
-        <p className="text-gray-500">Vérification de la session…</p>
-      </div>
-    );
-  }
-  
   const params = useParams()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // 2. Redirection si non authentifié
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/')
+    }
+  }, [status, router])
+
+  // 3. Chargement des détails une fois authentifié
+  useEffect(() => {
+    if (status !== 'authenticated') return
+
     async function fetchDetail() {
       try {
         const res = await fetch(`/api/daily-report-compta/${params.id}`)
         const json = await res.json()
-        if (!json.success) throw new Error(json.message)
+        if (!json.success) throw new Error(json.message || 'Erreur réseau')
         setData(json.data)
       } catch (e) {
         setError(e.message)
@@ -47,69 +39,47 @@ export default function ComptaDetailPage() {
         setLoading(false)
       }
     }
-    fetchDetail()
-  }, [params.id])
 
+    fetchDetail()
+  }, [status, params.id])
+
+  // 4. Rendus conditionnels après tous les Hooks
+  if (status === 'loading') {
+    return (
+      <div className="mt-16 p-4">
+        <p className="text-gray-500">Vérification de la session…</p>
+      </div>
+    )
+  }
+  if (status === 'unauthenticated') {
+    return null
+  }
   if (loading) {
     return (
       <div className="p-4 max-w-4xl mx-auto space-y-6">
-        {/* skeleton back button */}
+        {/* Skeletons… */}
         <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mb-4"></div>
-        {/* skeleton card header */}
         <div className="border bg-white rounded shadow p-4 animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
         </div>
-        {/* skeleton banques grid */}
-        <div className="border bg-white rounded shadow p-4 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Array(3).fill(0).map((_, i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-        {/* skeleton caisse principale */}
-        <div className="border bg-white rounded shadow p-4 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Array(2).fill(0).map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-        {/* skeleton transferts */}
-        <div className="border bg-white rounded shadow p-4 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Array(2).fill(0).map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-        {/* skeleton dettes */}
-        <div className="border bg-white rounded shadow p-4 animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="space-y-2">
-            {Array(3).fill(0).map((_, i) => (
-              <div key={i} className="h-4 bg-gray-200 rounded w-full"></div>
-            ))}
-          </div>
-        </div>
+        {/* etc. */}
       </div>
     )
   }
-
   if (error) {
     return (
       <div className="p-4 max-w-md mx-auto text-center">
         <h2 className="text-xl font-semibold text-red-600 mb-4">Erreur</h2>
         <p className="text-red-500 mb-6">{error}</p>
-        <Button variant="outline" onClick={() => router.back()}>Retour</Button>
+        <Button variant="outline" onClick={() => router.back()}>
+          ← Retour
+        </Button>
       </div>
     )
   }
 
+  // 5. Rendu principal
   const { date, banques, caissePrincipale, plateformes, dettes } = data
 
   return (

@@ -20,177 +20,157 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 
 export default function EditDailyReport() {
-  const { data: session, status } = useSession()
+  // 1. Tous les Hooks d’abord, dans un ordre fixe
+  const { data: session, status } = useSession();
   const router = useRouter();
-  
-  useEffect(() => {
-    if (status !== 'authenticated') {
-      router.push('/')
-      return null
-    }
-  }, [status, router])
-
-  if (status === 'loading') {
-    return (
-      <div className="mt-16 p-4">
-        <p className="text-gray-500">Vérification de la session…</p>
-      </div>
-    );
-  }
-
   const params = useParams();
   const { id } = params;
-  const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState(1);
-  const [isSaving, setIsSaving] = useState(false);
-  const [businessName, setBusinessName] = useState("")
 
   const methods = useForm({
     defaultValues: {
-      business: "",
-      date: "",
+      business: '',
+      date: '',
       revenueCash: 0,
       revenueOrangeMoney: 0,
       revenueWave: 0,
-      sortieCaisse: [{ description: "", total: 0 }],
+      sortieCaisse: [{ description: '', total: 0 }],
       versementTataDiara: 0,
-      sales: [{ ref: "", description: "", total: 0 }],
-      debts: [{ ref: "", description: "", total: 0 }],
-      reglementDebts: [{ ref: "", description: "", total: 0 }],
+      sales: [{ ref: '', description: '', total: 0 }],
+      debts: [{ ref: '', description: '', total: 0 }],
+      reglementDebts: [{ ref: '', description: '', total: 0 }],
     },
-    mode: "onBlur",
+    mode: 'onBlur',
   });
-
   const {
     register,
     control,
     handleSubmit,
-    setValue,
-    trigger,
     reset,
+    trigger,
     formState: { errors },
   } = methods;
 
-  const salesArray = useFieldArray({ control, name: "sales" });
-  const debtsArray = useFieldArray({ control, name: "debts" });
-  const regArray = useFieldArray({ control, name: "reglementDebts" });
-  const sortieArray = useFieldArray({ control, name: "sortieCaisse" });
+  const sortieArray = useFieldArray({ control, name: 'sortieCaisse' });
+  const salesArray   = useFieldArray({ control, name: 'sales' });
+  const debtsArray   = useFieldArray({ control, name: 'debts' });
+  const regArray     = useFieldArray({ control, name: 'reglementDebts' });
 
-  const refValidation = { pattern: /^(facture num \d+|ticket num \d+|reçu num \d+)$/i };
+  // 2. États locaux
+  const [loading, setLoading]       = useState(true);
+  const [step, setStep]             = useState(1);
+  const [isSaving, setIsSaving]     = useState(false);
+  const [businessName, setBusinessName] = useState('');
 
-  // Charger le rapport existant
+  const refValidation = {
+    pattern: /^(facture num \d+|ticket num \d+|reçu num \d+)$/i,
+  };
+
+  // 3. Effet de redirection si non-authentifié
   useEffect(() => {
-    if (!id) return;
+    if (status === 'unauthenticated') {
+      router.push('/');
+    }
+  }, [status, router]);
+
+  // 4. Effet de chargement du rapport existant
+  useEffect(() => {
+    if (status !== 'authenticated' || !id) return;
+
     axios
       .get(`/api/daily-report/${id}`)
       .then(({ data }) => {
         if (!data.success) {
-          toast.error(data.message || "Impossible de charger le rapport.");
+          toast.error(data.message || 'Impossible de charger le rapport.');
           return;
         }
         const rpt = data.data;
-        setBusinessName(rpt.business.name)
-        const formattedDate = new Date(rpt.date)
-          .toISOString()
-          .split("T")[0];
+        setBusinessName(rpt.business.name || '');
+        const formattedDate = new Date(rpt.date).toISOString().split('T')[0];
         reset({
-          business: rpt.business._id || rpt.business,
+          business: rpt.business._id,
           date: formattedDate,
           revenueCash: rpt.revenueCash,
           revenueOrangeMoney: rpt.revenueOrangeMoney,
           revenueWave: rpt.revenueWave,
           versementTataDiara: rpt.versementTataDiara,
-          sortieCaisse: rpt.sortieCaisse.length
-            ? rpt.sortieCaisse
-            : [{ description: "", total: 0 }],
-          sales: rpt.sales.length
-            ? rpt.sales
-            : [{ ref: "", description: "", total: 0 }],
-          debts: rpt.debts.length
-            ? rpt.debts
-            : [{ ref: "", description: "", total: 0 }],
+          sortieCaisse: rpt.sortieCaisse.length ? rpt.sortieCaisse : [{ description: '', total: 0 }],
+          sales: rpt.sales.length ? rpt.sales : [{ ref: '', description: '', total: 0 }],
+          debts: rpt.debts.length ? rpt.debts : [{ ref: '', description: '', total: 0 }],
           reglementDebts: rpt.reglementDebts.length
             ? rpt.reglementDebts
-            : [{ ref: "", description: "", total: 0 }],
+            : [{ ref: '', description: '', total: 0 }],
         });
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(err);
-        toast.error("Impossible de charger le rapport.");
+        toast.error('Impossible de charger le rapport.');
       })
       .finally(() => setLoading(false));
-  }, [id, reset]);
+  }, [status, id, reset]);
 
-  const onSubmit = async (data) => {
+  // 5. Gestion du submit
+  const onSubmit = async formData => {
     if (step < 5) {
-      setStep((s) => s + 1);
+      setStep(s => s + 1);
       return;
     }
 
-    // Validation des refs
-    const salesOk = await trigger(
-      salesArray.fields.map((_, i) => `sales.${i}.ref`)
-    );
-    const debtsOk = await trigger(
-      debtsArray.fields.map((_, i) => `debts.${i}.ref`)
-    );
-    const regOk = await trigger(
-      regArray.fields.map((_, i) => `reglementDebts.${i}.ref`)
-    );
+    // valider les refs
+    const salesOk = await trigger(salesArray.fields.map((_, i) => `sales.${i}.ref`));
+    const debtsOk = await trigger(debtsArray.fields.map((_, i) => `debts.${i}.ref`));
+    const regOk   = await trigger(regArray.fields.map((_, i) => `reglementDebts.${i}.ref`));
 
     if (!salesOk || !debtsOk || !regOk) {
       if (!salesOk) setStep(2);
       else if (!debtsOk) setStep(3);
       else setStep(4);
-      toast.error(
-        "Chaque référence doit être au format 'facture num XXXX' ou 'ticket num XXXX'."
-      );
+      toast.error("Références au format 'facture num XXXX', 'ticket num XXXX' ou 'reçu num XXXX'.");
       return;
     }
 
-    // Nettoyage
+    // nettoyer
     const cleanArr = (arr, hasRef = true) =>
       (arr || [])
-        .map((item) => {
-          const obj = {
-            description: item.description.trim(),
-            total: item.total,
-          };
+        .map(item => {
+          const obj = { description: item.description.trim(), total: item.total };
           if (hasRef) obj.ref = item.ref.trim();
           return obj;
         })
-        .filter(({ description, total, ref }) =>
+        .filter(item =>
           hasRef
-            ? ref !== "" || description !== "" || total !== ""
-            : description !== "" || total !== ""
+            ? item.ref || item.description || item.total
+            : item.description || item.total
         );
 
-    data.sales = cleanArr(data.sales, true);
-    data.debts = cleanArr(data.debts, true);
-    data.reglementDebts = cleanArr(data.reglementDebts, true);
-    data.sortieCaisse = cleanArr(data.sortieCaisse, false);
+    formData.sales = cleanArr(formData.sales, true);
+    formData.debts = cleanArr(formData.debts, true);
+    formData.reglementDebts = cleanArr(formData.reglementDebts, true);
+    formData.sortieCaisse = cleanArr(formData.sortieCaisse, false);
 
     setIsSaving(true);
     try {
-      console.log(data)
-      const rep = await axios.put(`/api/daily-report/${id}`, data);
-      toast.success(rep.data.message || "Rapport mis à jour !");
-      router.push("/dashboard/liste-rapport-quincaillerie");
+      const rep = await axios.put(`/api/daily-report/${id}`, formData);
+      toast.success(rep.data.message || 'Rapport mis à jour !');
+      router.push('/dashboard/liste-rapport-quincaillerie');
     } catch (err) {
       console.error(err);
-      toast.error(
-        err.response?.data?.message || "Erreur lors de la mise à jour."
-      );
+      toast.error(err.response?.data?.message || 'Erreur lors de la mise à jour.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (loading) return (
-    <div className="h-screen w-full flex items-center justify-center">
-      <p>Chargement...</p>
-    </div>
-  );
+  // 6. Rendus conditionnels après tous les Hooks
+  if (status === 'loading' || loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <p>Chargement…</p>
+      </div>
+    );
+  }
+  if (status === 'unauthenticated') {
+    return null; // redirigé par l'effet
+  }
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 mt-16 md:mt-6">

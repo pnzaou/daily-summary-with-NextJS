@@ -9,47 +9,42 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function DetteList() {
+  // 1. Hooks toujours en haut, dans le même ordre
   const { data: session, status } = useSession()
   const router = useRouter()
-  
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const pageSize = 10
+
+  // 2. Redirection si non-authentifié
   useEffect(() => {
-    if (status !== 'authenticated') {
+    if (status === 'unauthenticated') {
       router.push('/')
-      return null
     }
+    // aucun return
   }, [status, router])
 
-  if (status === 'loading') {
-    return (
-      <div className="mt-16 p-4">
-        <p className="text-gray-500">Vérification de la session…</p>
-      </div>
-    );
-  }
-  
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
-
+  // 3. Chargement initial des dettes
   useEffect(() => {
     async function fetchDettes() {
-      setLoading(true);
+      setLoading(true)
       try {
-        const res = await fetch('/api/dettes');
-        const json = await res.json();
-        if (json.success) setData(json.data);
+        const res = await fetch('/api/dettes')
+        const json = await res.json()
+        if (json.success) setData(json.data)
       } catch (e) {
-        console.error(e);
+        console.error(e)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    fetchDettes();
-  }, []);
+    fetchDettes()
+  }, [])
 
-  const handleToggle = async (item) => {
+  // 4. Toggle paiement
+  const handleToggle = async item => {
     try {
       const res = await fetch('/api/dettes/toggle', {
         method: 'PATCH',
@@ -57,30 +52,47 @@ export default function DetteList() {
         body: JSON.stringify({
           rapportId: item.rapportId,
           detteId: item._id,
-          type: item.type
-        })
-      });
-      const json = await res.json();
+          type: item.type,
+        }),
+      })
+      const json = await res.json()
       if (json.success) {
-        // mettre à jour localement
-        setData(prev => prev.map(d =>
-          d._id === item._id ? { ...d, status: d.status === 'impayée' ? 'payée' : 'impayée' } : d
-        ));
+        setData(prev =>
+          prev.map(d =>
+            d._id === item._id
+              ? { ...d, status: d.status === 'impayée' ? 'payée' : 'impayée' }
+              : d
+          )
+        )
       }
     } catch (err) {
-      console.error('Erreur toggle:', err);
+      console.error('Erreur toggle:', err)
     }
-  };
+  }
 
+  // 5. Filtrage et pagination (useMemo)
   const filtered = useMemo(
-    () => data.filter(item => typeFilter === 'all' || item.type === typeFilter),
+    () =>
+      data.filter(item => typeFilter === 'all' || item.type === typeFilter),
     [data, typeFilter]
-  );
+  )
   const paginated = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, page]);
-  const totalPages = Math.ceil(filtered.length / pageSize);
+    const start = (page - 1) * pageSize
+    return filtered.slice(start, start + pageSize)
+  }, [filtered, page])
+  const totalPages = Math.ceil(filtered.length / pageSize)
+
+  // 6. Rendus conditionnels après tous les hooks
+  if (status === 'loading') {
+    return (
+      <div className="mt-16 p-4">
+        <p className="text-gray-500">Vérification de la session…</p>
+      </div>
+    )
+  }
+  if (status === 'unauthenticated') {
+    return null
+  }
 
   return (
     <div className="mt-16 p-4">
