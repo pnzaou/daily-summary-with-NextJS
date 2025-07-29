@@ -17,9 +17,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function EditDailyReport() {
+  const { data: session, status } = useSession()
   const router = useRouter();
+  if (status !== 'authenticated') {
+    router.push('/')
+    return null
+  }
   const params = useParams();
   const { id } = params;
   const [loading, setLoading] = useState(true);

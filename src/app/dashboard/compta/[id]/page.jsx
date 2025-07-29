@@ -9,10 +9,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useSession } from 'next-auth/react'
 
 export default function ComptaDetailPage() {
-  const params = useParams()
+  const { data: session, status } = useSession()
   const router = useRouter()
+  if (status !== 'authenticated') {
+    router.push('/')
+    return null
+  }
+  const params = useParams()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

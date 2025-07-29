@@ -6,10 +6,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function DetteList() {
   const { data: session, status } = useSession()
-  console.log("session :",session, "status :",status)
+  const router = useRouter()
+  if (status !== 'authenticated') {
+    router.push('/')
+    return null
+  }
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('all');

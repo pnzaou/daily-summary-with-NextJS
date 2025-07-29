@@ -1,9 +1,16 @@
 "use client";
 
 import { LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const Header = ({userName}) => {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  if (status !== 'authenticated') {
+    router.push('/')
+    return null
+  }
   return (
     <nav className="fixed top-0 left-0 w-full bg-white shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
