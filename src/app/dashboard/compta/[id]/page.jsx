@@ -57,16 +57,53 @@ export default function ComptaDetailPage() {
   if (loading) {
     return (
       <div className="p-4 max-w-4xl mx-auto space-y-6">
-        {/* Skeletons… */}
+        {/* skeleton back button */}
         <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mb-4"></div>
+        {/* skeleton card header */}
         <div className="border bg-white rounded shadow p-4 animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
         </div>
-        {/* etc. */}
+        {/* skeleton banques grid */}
+        <div className="border bg-white rounded shadow p-4 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array(3).fill(0).map((_, i) => (
+              <div key={i} className="h-20 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+        {/* skeleton caisse principale */}
+        <div className="border bg-white rounded shadow p-4 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array(2).fill(0).map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+        {/* skeleton transferts */}
+        <div className="border bg-white rounded shadow p-4 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array(2).fill(0).map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+        {/* skeleton dettes */}
+        <div className="border bg-white rounded shadow p-4 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="space-y-2">
+            {Array(3).fill(0).map((_, i) => (
+              <div key={i} className="h-4 bg-gray-200 rounded w-full"></div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
+  
   if (error) {
     return (
       <div className="p-4 max-w-md mx-auto text-center">
