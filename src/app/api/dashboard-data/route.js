@@ -57,6 +57,18 @@ export const GET = withAuth(async (req) => {
       return total;
     }
 
+    // --- Helper pour Commission assurance ---
+    async function aggregateAssuranceCommission() {
+      const biz = await Business.findOne({ name: "Commission assurance" }).lean();
+      if (!biz) return 0;
+      const [{ total = 0 } = {}] = await RapportCompta.aggregate([
+        { $unwind: "$caissePrincipale.entrees" },
+        { $match: { "caissePrincipale.entrees.business": biz._id } },
+        { $group: { _id: null, total: { $sum: "$caissePrincipale.entrees.montant" } } }
+      ]);
+      return total;
+    }
+
     // --- bornes temporelles ---
     const now = new Date();
     const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -281,6 +293,8 @@ export const GET = withAuth(async (req) => {
       caGlobal[period] = caGerants + totalCommission + totalCaisse;
     }
 
+    const commissions_assurance = await aggregateAssuranceCommission();
+
     // --- Réponse finale ---
     return NextResponse.json(
       {
@@ -291,6 +305,7 @@ export const GET = withAuth(async (req) => {
           banksCards,
           drTotals,
           caGlobal,
+          commissions_assurance,
           lastCompta: {
             _id: lastCompta?._id,
             date: lastCompta?.date,
