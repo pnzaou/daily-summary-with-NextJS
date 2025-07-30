@@ -11,11 +11,12 @@ import { SquareArrowOutUpRight, SquareArrowOutUpRightIcon } from "lucide-react";
  *     banksCards,
  *     drTotals: { quincailleries, locations, plain },
  *     caGlobal: { day, month, year },
+ *     commissions_assurance,
  *     lastCompta
  *   }
  */
 export default function AdminHome({ reportData }) {
-  const { dailyReports, banksCards, drTotals, caGlobal, lastCompta } = reportData;
+  const { dailyReports, banksCards, drTotals, caGlobal, commissions_assurance, lastCompta } = reportData;
 
   // Helper to format numbers with dots and append FCFA
   const formatMoney = (value) => {
@@ -162,6 +163,13 @@ export default function AdminHome({ reportData }) {
             <div className="text-2xl font-semibold">{formatMoney(caGlobal.year)}</div>
 
           </div>
+        </div>
+      </div>
+
+      <div className="bg-green-50 dark:bg-green-900 shadow rounded-lg p-4 mb-6">
+        <h3 className="text-xl font-semibold mb-2">Commission assurance (ce mois)</h3>
+        <div className="text-2xl font-semibold">
+          {formatMoney(commissions_assurance)}
         </div>
       </div>
 
