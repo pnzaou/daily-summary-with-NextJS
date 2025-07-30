@@ -8,12 +8,6 @@ export const GET = withAuth(async (req) => {
   try {
     await dbConnection();
 
-    // pipeline d'agrégation : 
-    // 1) on déroule toutes les "entrees"
-    // 2) on lookup sur la collection "businesses"
-    // 3) on ne garde que celles dont biz.type === "location"
-    // 4) on projette date, nom du business, description et montant
-    // 5) on trie du plus récent au plus ancien
     const historique = await RapportCompta.aggregate([
       { $unwind: "$caissePrincipale.entrees" },
       {

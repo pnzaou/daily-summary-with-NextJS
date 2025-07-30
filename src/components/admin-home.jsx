@@ -71,7 +71,7 @@ export default function AdminHome({ reportData }) {
           <h3 className="col-span-full text-xl font-semibold">
             Appartements / Véhicules
           </h3>
-          <Link href="/location/détails" className="text-blue-500 hover:text-blue-600">
+          <Link href="/dashboard/historique-locations" className="text-blue-500 hover:text-blue-600">
             <SquareArrowOutUpRightIcon size={15} />
           </Link>
         </div>
