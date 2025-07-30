@@ -57,11 +57,14 @@ export const GET = withAuth(async (req) => {
       return total;
     }
 
-    // --- Helper pour Commission assurance ---
+    // --- Helper pour Commission assurance sur le mois ---
     async function aggregateAssuranceCommission() {
+      const now      = new Date();
+      const startMon = new Date(now.getFullYear(), now.getMonth(), 1);
       const biz = await Business.findOne({ name: "Commission assurance" }).lean();
       if (!biz) return 0;
       const [{ total = 0 } = {}] = await RapportCompta.aggregate([
+        { $match: { date: { $gte: startMon } } },
         { $unwind: "$caissePrincipale.entrees" },
         { $match: { "caissePrincipale.entrees.business": biz._id } },
         { $group: { _id: null, total: { $sum: "$caissePrincipale.entrees.montant" } } }
