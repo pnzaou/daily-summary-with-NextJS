@@ -8,6 +8,12 @@ const BusinessSchema = new mongoose.Schema(
       trim: true,
       unique: true
     },
+    type: {
+      type: String,
+      enum: ["location", "quincaillerie"],
+      required: false,
+      default: null
+    }
   },
   {
     timestamps: true,

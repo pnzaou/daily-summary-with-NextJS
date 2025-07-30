@@ -39,15 +39,22 @@ export const GET = withAuth(async (req) => {
       return doc?.plateformes?.find(p => p.nom === nom) || null;
     }
 
-    // Helper : dernière commission définie pour une plateforme
-    async function fetchLatestCommissionByName(nom) {
-      const doc = await RapportCompta
-        .findOne({ "plateformes.nom": nom, "plateformes.commission": { $exists: true } })
-        .sort({ date: -1 })
-        .lean();
-      // On extrait la plateforme correspondante
-      const plat = doc?.plateformes?.find(p => p.nom === nom && p.commission != null);
-      return plat?.commission ?? null;
+    // Helper : somme des commissions ce mois-ci pour une plateforme
+    async function aggregateCommissionMonthByName(nom) {
+      const now       = new Date();
+      const startMon  = new Date(now.getFullYear(), now.getMonth(), 1);
+      const [{ total = 0 } = {}] = await RapportCompta.aggregate([
+        { $match: { date: { $gte: startMon } } },
+        { $unwind: "$plateformes" },
+        { $match: { "plateformes.nom": nom, "plateformes.commission": { $exists: true } } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$plateformes.commission" }
+          }
+        }
+      ]);
+      return total;
     }
 
     // --- bornes temporelles ---
@@ -200,11 +207,8 @@ export const GET = withAuth(async (req) => {
           // si aucune occurrence : on skip ce nom
           return null;
         }
-        // Si commission absente dans p, on va chercher la dernière commission dispo
-        let commission = p.commission;
-        if (commission == null) {
-          commission = await fetchLatestCommissionByName(nom);
-        }
+        // commission = somme de toutes les commissions du mois en cours
+        const commission = await aggregateCommissionMonthByName(nom);
         return {
           nom:           p.nom,
           commission,                // désormais toujours défini ou null
