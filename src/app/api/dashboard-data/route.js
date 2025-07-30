@@ -225,7 +225,7 @@ export const GET = withAuth(async (req) => {
 
     // --- Calcul des totaux DailyReport et CA global ---
     const quincailleries = ["Quincaillerie 1", "Quincaillerie 2"];
-    const locations      = ["Appartement F4", "Appartement F3", "Mazda", "Sontafe"];
+    const locations      = ["Appartement F4", "Appartement F3", "Mazda", "Sontafe Rouge", "Sontafe Bleu"];
 
     const drTotals = {
       plain: {
