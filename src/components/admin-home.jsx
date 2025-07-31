@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { SquareArrowOutUpRight, SquareArrowOutUpRightIcon } from "lucide-react";
+import DailyReportsTable from "./daily-reports-table";
 
 /**
  * AdminHome
@@ -26,14 +27,7 @@ export default function AdminHome({ reportData }) {
     return `${withDots} FCFA`;
   };
 
-  const formatDate = (iso) =>
-    iso
-      ? new Date(iso).toLocaleDateString("fr-FR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-      : "-";
+  
 
   const renderFullCards = (title, periodTotals) => {
     const periods = ["day", "month", "year"];
@@ -179,41 +173,7 @@ export default function AdminHome({ reportData }) {
       {renderLocationCards()}
       {renderPlateformesCards()}
 
-      <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Date</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Activité</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Ventes</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Revenu total</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {dailyReports.map((rep) => (
-              <tr
-                key={rep._id}
-                className={rep.isCompta ? "bg-yellow-50 dark:bg-yellow-900" : "hover:bg-gray-50 dark:hover:bg-gray-700"}
-              >
-                <td className="px-4 py-2">{formatDate(rep.date)}</td>
-                <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
-                  {rep.isCompta ? "Rapport Compta" : rep.business?.name || "-"}
-                </td>
-                <td className="px-4 py-2">{rep.sales?.length ?? "-"}</td>
-                <td className="px-4 py-2">
-                  {rep.revenueCash + rep.revenueOrangeMoney + rep.revenueWave}
-                </td>
-                <td className="px-4 py-2">
-                  <Link href={`/dashboard/rapport/${rep._id}`}> 
-                    <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Détails</span>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DailyReportsTable />
     </div>
   );
 }
