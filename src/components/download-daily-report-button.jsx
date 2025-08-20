@@ -30,7 +30,7 @@ export default function DownloadDailyReportButton({ dailyReportId, fetchUrl }) {
       const a = document.createElement("a");
       const dateStr = report?.date ? new Date(report.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
       a.href = objectUrl;
-      a.download = `${(js.business?.name || "daily-report")}-${dateStr}.pdf`;
+      a.download = `${(js.data?.business?.name || "daily-report")}-${dateStr}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
