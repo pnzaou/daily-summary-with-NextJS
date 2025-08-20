@@ -4,6 +4,7 @@ import { preparingServerSideRequest } from "@/utils/preparingServerRequest";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import DownloadDailyReportButton from "@/components/DownloadDailyReportButton";
 
 const Page = async ({ params }) => {
   const session = await getServerSession(authOptions);
@@ -18,7 +19,6 @@ const Page = async ({ params }) => {
     const res = await fetch(`${protocol}://${host}/api/daily-report/${id}`, {
       headers: { cookie },
     });
-    console.log("res: ", res);
     const json = await res.json();
     report = json.data;
   }
@@ -68,17 +68,29 @@ const Page = async ({ params }) => {
     <div className="mt-16 p-4 max-w-4xl mx-auto space-y-6">
       <Link href="/dashboard">
         <span className="text-blue-600 dark:text-blue-400 hover:underline">
-          ← Retour
+          {" "}
+          ← Retour{" "}
         </span>
       </Link>
 
+      {/* Header: title + date + download button */}
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-          Détails du rapport
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Date : {formatDate(report.date)}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+              Détails du rapport
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Date : {formatDate(report.date)}
+            </p>
+          </div>
+
+          {/* Download button placé ici, aligné à droite */}
+          <div>
+            {/* Le composant client récupèrera le rapport côté client via /api/daily-report/:id */}
+            <DownloadDailyReportButton dailyReportId={id} />
+          </div>
+        </div>
       </header>
 
       {/* Résumé général & Revenus */}
@@ -126,6 +138,7 @@ const Page = async ({ params }) => {
             </p>
           </div>
         </div>
+
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
           <h2 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
             Résumé des revenus
@@ -207,10 +220,12 @@ const Page = async ({ params }) => {
           ) : (
             <p className="text-gray-500 dark:text-gray-400">Aucune dette.</p>
           )}
+
           <p className="mt-4 font-semibold text-gray-800 dark:text-gray-100">
             Total Dettes: {totalDettes}
           </p>
         </section>
+
         <section className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
           <h2 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
             Règlements de dettes ({report.reglementDebts.length})
@@ -237,6 +252,7 @@ const Page = async ({ params }) => {
           ) : (
             <p className="text-gray-500 dark:text-gray-400">Aucun règlement.</p>
           )}
+
           <p className="mt-4 font-semibold text-gray-800 dark:text-gray-100">
             Total Règlements: {totalReglements}
           </p>
