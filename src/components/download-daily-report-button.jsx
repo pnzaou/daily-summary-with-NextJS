@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { pdf } from "@react-pdf/renderer";
-import DailyReportPdfDocument from "@/components/DailyReportPdfDocument";
+import DailyReportPdfDocument from "@/components/daily-rapport-pdf-document";
 import { Button } from "@/components/ui/button";
 
 export default function DownloadDailyReportButton({ dailyReportId, fetchUrl }) {
