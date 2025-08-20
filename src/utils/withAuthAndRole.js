@@ -8,8 +8,6 @@ export const withAuthAndRole = (handler) => {
 
         const session = await getServerSession(authOptions)
 
-        console.log(session)
-
         if(!session || session.user.role !== "admin") {
             return NextResponse.json(
                 {

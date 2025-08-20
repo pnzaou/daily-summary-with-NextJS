@@ -13,7 +13,7 @@ export default function DownloadRapportButton({ rapportId }) {
     setLoading(true);
     try {
       // si ton endpoint nécessite cookies / session, include credentials
-      const res = await fetch(`/api/rapport-compta/${rapportId}`, {
+      const res = await fetch(`/api/daily-report-compta/${rapportId}`, {
         method: "GET",
         credentials: "include",
       });

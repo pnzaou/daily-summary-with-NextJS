@@ -43,8 +43,6 @@ export default function ComptaDetailPage() {
     fetchDetail();
   }, [status, params.id]);
 
-  console.log(data);
-
   // 4. Rendus conditionnels après tous les Hooks
   if (status === "loading") {
     return (
