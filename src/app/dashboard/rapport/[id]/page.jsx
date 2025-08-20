@@ -4,7 +4,7 @@ import { preparingServerSideRequest } from "@/utils/preparingServerRequest";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import DownloadDailyReportButton from "@/components/DownloadDailyReportButton";
+import DownloadDailyReportButton from "@/components/download-daily-report-button";
 
 const Page = async ({ params }) => {
   const session = await getServerSession(authOptions);
