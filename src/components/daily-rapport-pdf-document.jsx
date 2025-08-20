@@ -24,9 +24,12 @@ const styles = StyleSheet.create({
 });
 
 function formatMoney(v) {
-  if (v == null) return '0';
+  if (v == null) return "0";
   try {
-    return new Intl.NumberFormat('fr-FR').format(v) + ' FCFA';
+    // utiliser un séparateur standard (espace normal ou virgule)
+    return new Intl.NumberFormat("fr-FR", { useGrouping: true })
+      .format(v)
+      .replace(/\u202F/g, " ") + " FCFA";
   } catch {
     return String(v);
   }
