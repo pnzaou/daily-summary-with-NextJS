@@ -3,6 +3,7 @@
 import { useState } from "react";
 import RapportComptaPdfDocument from "./rapport-compta-pdf-document";
 import { pdf } from "@react-pdf/renderer";
+import { Button } from "./ui/button";
 
 export default function DownloadRapportButton({ rapportId }) {
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,7 @@ export default function DownloadRapportButton({ rapportId }) {
         ? new Date(report.date).toISOString().split("T")[0]
         : new Date().toISOString().split("T")[0];
       a.href = url;
-      a.download = `rapport-${dateStr}.pdf`;
+      a.download = `rapport-comptable-${dateStr}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -49,13 +50,12 @@ export default function DownloadRapportButton({ rapportId }) {
 
   return (
     <div>
-      <button
+      <Button
         onClick={handleDownload}
         disabled={loading}
-        className="px-4 py-2 rounded bg-blue-600 text-white"
       >
         {loading ? "Génération..." : "Télécharger le rapport (PDF)"}
-      </button>
+      </Button>
       {error && <div style={{ color: "red", marginTop: 8 }}>{error}</div>}
     </div>
   );
