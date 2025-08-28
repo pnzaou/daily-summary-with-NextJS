@@ -185,7 +185,6 @@ export const GET = withAuth(async (req) => {
       if (found) {
         banquesResolved.push({ nom: name, montant: Number(found.montant) });
       } else {
-        console.log("LES AUTRES")
         const fallback = await fetchLatestBanqueByName(name);
         if (fallback) {
           banquesResolved.push({ nom: name, montant: Number(fallback.montant) });

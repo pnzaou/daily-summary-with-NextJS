@@ -40,7 +40,7 @@ export const GET = withAuthAndRole(async (req) => {
                 type: { $literal: 'dette' },
                 date: '$date',
                 business: '$business.name',
-                numeroFacture: '$debts.numeroFacture',
+                numeroFacture: '$debts.ref',
                 description: '$debts.description',
                 total: '$debts.total'
             }}
@@ -60,7 +60,7 @@ export const GET = withAuthAndRole(async (req) => {
                 type: { $literal: 'reglement' },
                 date: '$date',
                 business: '$business.name',
-                numeroFacture: '$reglementDebts.numeroFacture',
+                numeroFacture: '$reglementDebts.ref',
                 description: '$reglementDebts.description',
                 total: '$reglementDebts.total'
             }}
