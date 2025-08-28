@@ -19,7 +19,7 @@ export const PATCH = withAuth(async (req) => {
     let subDoc;
     if (type === "global") {
       subDoc = rapport.dettes.id(detteId);
-    } else if (type === "plateforme") {
+    } else if (type === "plateforme de transfert") {
       // trouver dans chaque plateforme
       for (const plt of rapport.plateformes) {
         const d = plt.dettes.id(detteId);
