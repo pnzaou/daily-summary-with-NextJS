@@ -9,37 +9,33 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function DebtsPage() {
-  // 1. Hooks en haut, toujours dans le même ordre
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // 2. États locaux
   const today = new Date().toISOString().split('T')[0];
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
+  const [filterType, setFilterType] = useState('all'); // 'all' | 'dette' | 'reglement'
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 3. Redirection si non authentifié
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
     }
   }, [status, router]);
 
-  // 4. Chargement des données quand on est authentifié et que les dates changent
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     setLoading(true);
-    fetch(`/api/debts?start=${startDate}&end=${endDate}`)
+    fetch(`/api/debts?start=${startDate}&end=${endDate}&type=${filterType}`)
       .then(res => res.json())
       .then(json => setData(json.data || []))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [status, startDate, endDate]);
+  }, [status, startDate, endDate, filterType]); // <-- include filterType
 
-  // 5. Rendus conditionnels
   if (status === 'loading') {
     return (
       <div className="mt-16 p-4">
@@ -47,12 +43,8 @@ export default function DebtsPage() {
       </div>
     );
   }
-  if (status === 'unauthenticated') {
-    // on attend la redirection du useEffect
-    return null;
-  }
+  if (status === 'unauthenticated') return null;
 
-  // 6. Rendu quand authenticated
   return (
     <div className="mt-16 p-4">
       <Link href="/dashboard">
@@ -83,7 +75,23 @@ export default function DebtsPage() {
                 onChange={e => setEndDate(e.target.value)}
               />
             </div>
-            <Button onClick={() => {/* facultatif, l'effet relance fetch */}} className="mt-2 sm:mt-6">
+
+            {/* ========== Nouveau select de filtre ========= */}
+            <div className="flex flex-col">
+              <label htmlFor="filterType" className="text-sm font-medium">Afficher</label>
+              <select
+                id="filterType"
+                value={filterType}
+                onChange={e => setFilterType(e.target.value)}
+                className="input"
+              >
+                <option value="all">Tout</option>
+                <option value="dette">Dettes</option>
+                <option value="reglement">Règlements</option>
+              </select>
+            </div>
+            {/* bouton Filtrer (optionnel, l'effet recharge déjà) */}
+            <Button onClick={() => {/* trigger visuel si besoin */}} className="mt-2 sm:mt-6">
               Filtrer
             </Button>
           </div>

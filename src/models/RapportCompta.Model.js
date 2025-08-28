@@ -34,6 +34,11 @@ const EntreeSchema = new mongoose.Schema({
     montant: Number
 })
 
+const VersementSchema = new mongoose.Schema({
+  method: { type: String, enum: ["espèces", "wave", "orange money"] }, // pas de default
+  montant: { type: Number }
+});
+
 const RapportSchema = new mongoose.Schema({
     date: { type: Date, required: true, default: () => new Date() },
     banques: [BanqueSchema],
@@ -43,7 +48,11 @@ const RapportSchema = new mongoose.Schema({
         sorties: [TransactionSchema]
     },
     plateformes: [PlateformeSchema],
-    dettes: [DetTransactionSchema]
+    dettes: [DetTransactionSchema],
+    versement: {
+      type: VersementSchema,
+      required: undefined
+    }
 })
 
 const RapportCompta = mongoose.models.RapportCompta || mongoose.model("RapportCompta", RapportSchema)

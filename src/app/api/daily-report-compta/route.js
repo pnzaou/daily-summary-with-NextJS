@@ -62,6 +62,17 @@ export const POST = withAuth(async (req) => {
       }).filter(Boolean);
     }
 
+    // Versement (ajout demandé)
+    if (data.versement && typeof data.versement === "object") {
+      const maybeVersement = pickDefined({
+        method: data.versement.method,
+        montant: data.versement.montant
+      });
+      if (Object.keys(maybeVersement).length > 0) {
+        payload.versement = maybeVersement;
+      }
+    }
+
     // Création & sauvegarde
     const rapport = new RapportCompta(payload);
     const saved = await rapport.save();

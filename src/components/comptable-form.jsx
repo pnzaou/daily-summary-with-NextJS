@@ -32,6 +32,9 @@ const PLATEFORMES = [
   { id: "p5", nom: "Wizall" },
 ];
 
+// Enum versement (même values que dans le schema)
+const VERSEMENT_METHODS = ["espèces", "wave", "orange money"];
+
 export default function RapportFormCompta({ business = [], className, ...props }) {
   const methods = useForm({
     defaultValues: {
@@ -40,6 +43,7 @@ export default function RapportFormCompta({ business = [], className, ...props }
       caissePrincipale: {},
       dettes: [],
       plateformes: [],
+      versement: {}, // optionnel
     },
   });
 
@@ -216,7 +220,7 @@ export default function RapportFormCompta({ business = [], className, ...props }
                   </Button>
                 </div>
               )}
-              {/* STEP 4 – Plateformes */}
+              {/* STEP 4 – Plateformes + Versement */}
               {step === 4 && (
                 <div className="space-y-4">
                   <h2 className="text-lg font-semibold">Transfert d'argent</h2>
@@ -237,6 +241,26 @@ export default function RapportFormCompta({ business = [], className, ...props }
                   >
                     Ajouter Plateforme
                   </Button>
+
+                  {/* === NOUVEAU : Versement (optionnel) === */}
+                  <div className="mt-6 p-4">
+                    <h3 className="font-semibold">Versement (Q1 et Q2)</h3>
+                    <div className="grid grid-cols-2 gap-4 mt-3">
+                      <div className="grid gap-1">
+                        <Label>Méthode</Label>
+                        <select {...register("versement.method")} className="input">
+                          <option value="">Sélectionner</option>
+                          {VERSEMENT_METHODS.map(m => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="grid gap-1">
+                        <Label>Montant</Label>
+                        <Input type="number" {...register("versement.montant", { valueAsNumber: true })} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
               {/* NAVIGATION */}
