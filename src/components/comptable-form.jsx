@@ -81,6 +81,11 @@ export default function RapportFormCompta({ business = [], className, ...props }
               dernier rapport
             </Button>
           </Link>
+          <Link href="/dashboard/liste-rapport-compta">
+            <Button>
+              mes rapports
+            </Button>
+          </Link>
           <Link href="/dashboard/liste-rapport-quincaillerie">
             <Button>
               Quincaillerie

@@ -74,16 +74,19 @@ const styles = StyleSheet.create({
   smallSpacing: { marginBottom: 4 },
 });
 
+function toNumber(v) {
+  if (v == null || v === "") return 0;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function formatMoney(v) {
-  if (v == null) return "0";
+  const n = toNumber(v);
   try {
-    return (
-      new Intl.NumberFormat("fr-FR", { useGrouping: true })
-        .format(v)
-        .replace(/\u202F/g, " ") + " FCFA"
-    );
+    // format sans espace insécable problématique
+    return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n) + " FCFA";
   } catch {
-    return String(v);
+    return String(n) + " FCFA";
   }
 }
 
@@ -94,17 +97,27 @@ export default function RapportComptaPdfDocument({ report }) {
     caissePrincipale = {},
     plateformes = [],
     dettes = [],
+    versement = null,
   } = report || {};
 
   const banquesList = Array.isArray(banques) ? banques : [];
-  const entrees = Array.isArray(caissePrincipale.entrees)
-    ? caissePrincipale.entrees
-    : [];
-  const sorties = Array.isArray(caissePrincipale.sorties)
-    ? caissePrincipale.sorties
-    : [];
+  const entrees = Array.isArray(caissePrincipale.entrees) ? caissePrincipale.entrees : [];
+  const sorties = Array.isArray(caissePrincipale.sorties) ? caissePrincipale.sorties : [];
   const plateformesList = Array.isArray(plateformes) ? plateformes : [];
   const dettesList = Array.isArray(dettes) ? dettes : [];
+
+  const totalBanques = banquesList.reduce((s, b) => s + toNumber(b?.montant), 0);
+
+  // compte dettes payées / impayées (racine)
+  const dettesCounts = dettesList.reduce(
+    (acc, d) => {
+      const s = (d && d.status) ? d.status : "impayée";
+      if (s === "payée") acc.payee += 1;
+      else acc.impayee += 1;
+      return acc;
+    },
+    { payee: 0, impayee: 0 }
+  );
 
   return (
     <Document>
@@ -119,15 +132,26 @@ export default function RapportComptaPdfDocument({ report }) {
               <Text style={[styles.meta, styles.smallSpacing]}>
                 Généré depuis l'application
               </Text>
+
+              <Text style={[styles.meta, { marginTop: 6 }]}>
+                <Text style={styles.bold}>Total banques : </Text>
+                {formatMoney(totalBanques)}
+              </Text>
             </View>
-            <View>
+
+            <View style={{ width: 180 }}>
               <View style={{ ...styles.card, padding: 6 }}>
                 <Text style={styles.cardTitle}>Caisse Principale</Text>
                 <Text style={styles.listRow}>
                   <Text>Caisse :</Text>
                   <Text style={styles.bold}>
-                    {formatMoney(caissePrincipale.montant)}
+                    {formatMoney(caissePrincipale?.montant)}
                   </Text>
+                </Text>
+
+                <Text style={[styles.smallMuted, { marginTop: 6 }]}>
+                  Versement :{" "}
+                  {versement ? `${versement.method || "-"} — ${formatMoney(versement.montant)}` : "—"}
                 </Text>
               </View>
             </View>
@@ -143,10 +167,10 @@ export default function RapportComptaPdfDocument({ report }) {
               banquesList.map((b, i) => (
                 <View key={b._id || b.nom || i} style={styles.gridItem}>
                   <View style={styles.gridItemInner}>
-                    <Text style={{ fontWeight: 700 }}>{b.nom}</Text>
+                    <Text style={{ fontWeight: 700 }}>{b.nom ?? "—"}</Text>
                     <Text style={styles.smallMuted}>Montant</Text>
                     <Text style={styles.bold}>
-                      {formatMoney(Number(b.montant))}
+                      {formatMoney(b.montant)}
                     </Text>
                   </View>
                 </View>
@@ -163,16 +187,21 @@ export default function RapportComptaPdfDocument({ report }) {
               {entrees.length === 0 ? (
                 <Text>—</Text>
               ) : (
-                entrees.map((e, idx) => (
-                  <View key={e._id || idx} style={styles.listRow}>
-                    <Text style={{ width: "70%" }}>
-                      {e.business?.name ?? e.description ?? "—"}
-                    </Text>
-                    <Text style={{ width: "30%", textAlign: "right" }}>
-                      {formatMoney(e.montant)}
-                    </Text>
-                  </View>
-                ))
+                entrees.map((e, idx) => {
+                  // business peut être {_id, name} ou string id
+                  const biz = e?.business;
+                  const bizName = biz?.name ?? (typeof biz === "string" ? biz : null);
+                  return (
+                    <View key={e._id || idx} style={styles.listRow}>
+                      <Text style={{ width: "70%" }}>
+                        {bizName ? `${bizName}` : (e.description ?? "—")}
+                      </Text>
+                      <Text style={{ width: "30%", textAlign: "right" }}>
+                        {formatMoney(e.montant)}
+                      </Text>
+                    </View>
+                  );
+                })
               )}
             </View>
 
@@ -183,7 +212,7 @@ export default function RapportComptaPdfDocument({ report }) {
               ) : (
                 sorties.map((s, idx) => (
                   <View key={s._id || idx} style={styles.listRow}>
-                    <Text style={{ width: "70%" }}>{s.description}</Text>
+                    <Text style={{ width: "70%" }}>{s.description ?? "—"}</Text>
                     <Text style={{ width: "30%", textAlign: "right" }}>
                       {formatMoney(s.montant)}
                     </Text>
@@ -195,13 +224,13 @@ export default function RapportComptaPdfDocument({ report }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Transferts d'argent</Text>
+          <Text style={styles.cardTitle}>Transferts d'argent (Plateformes)</Text>
           {plateformesList.length === 0 ? (
             <Text>—</Text>
           ) : (
             plateformesList.map((p, idx) => (
               <View key={p._id || p.nom || idx} style={styles.platformBox}>
-                <Text style={{ fontSize: 11, fontWeight: 700 }}>{p.nom}</Text>
+                <Text style={{ fontSize: 11, fontWeight: 700 }}>{p.nom ?? "—"}</Text>
                 <View style={{ marginTop: 6 }}>
                   <View style={styles.listRow}>
                     <Text>Fond de caisse</Text>
@@ -212,6 +241,10 @@ export default function RapportComptaPdfDocument({ report }) {
                     <Text>{formatMoney(p.uvDisponible)}</Text>
                   </View>
                   <View style={styles.listRow}>
+                    <Text>Recharge UV</Text>
+                    <Text>{formatMoney(p.rechargeUV)}</Text>
+                  </View>
+                  <View style={styles.listRow}>
                     <Text>Total dépôt</Text>
                     <Text>{formatMoney(p.totalDepot)}</Text>
                   </View>
@@ -219,23 +252,25 @@ export default function RapportComptaPdfDocument({ report }) {
                     <Text>Total retrait</Text>
                     <Text>{formatMoney(p.totalRetrait)}</Text>
                   </View>
-                  {p.commission != null && (
-                    <View style={styles.listRow}>
-                      <Text>Commission</Text>
-                      <Text>{formatMoney(p.commission)}</Text>
-                    </View>
-                  )}
+                  <View style={styles.listRow}>
+                    <Text>Commission</Text>
+                    <Text>{formatMoney(p.commission)}</Text>
+                  </View>
+                  <View style={styles.listRow}>
+                    <Text>Disponibilités</Text>
+                    <Text>{formatMoney(p.disponibilites)}</Text>
+                  </View>
 
                   {Array.isArray(p.dettes) && p.dettes.length > 0 && (
                     <View style={{ marginTop: 6 }}>
                       <Text style={{ fontSize: 10, fontWeight: 700 }}>
-                        Dettes
+                        Dettes ({p.dettes.length})
                       </Text>
                       {p.dettes.map((d, j) => (
                         <View key={d._id || j} style={styles.listRow}>
-                          <Text>{d.description}</Text>
-                          <Text>
-                            {formatMoney(d.montant)} — {d.status}
+                          <Text style={{ width: "60%" }}>{d.description ?? "—"}</Text>
+                          <Text style={{ width: "40%", textAlign: "right" }}>
+                            {formatMoney(d.montant)} {d.status ? ` — ${d.status}` : ""}
                           </Text>
                         </View>
                       ))}
@@ -248,19 +283,24 @@ export default function RapportComptaPdfDocument({ report }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Dettes</Text>
+          <Text style={styles.cardTitle}>Dettes (global)</Text>
           {dettesList.length === 0 ? (
             <Text>—</Text>
           ) : (
-            dettesList.map((d, idx) => (
-              <View key={d._id || idx} style={styles.listRow}>
-                <Text style={{ width: "70%" }}>{d.description}</Text>
-                <Text style={{ width: "30%", textAlign: "right" }}>
-                  {formatMoney(d.montant)}
-                  {d.status ? ` — ${d.status}` : ""}
-                </Text>
-              </View>
-            ))
+            <>
+              <Text style={{ fontSize: 10, color: "#555", marginBottom: 6 }}>
+                <Text style={styles.bold}>Payées:</Text> {dettesCounts.payee} —{" "}
+                <Text style={styles.bold}>Impayées:</Text> {dettesCounts.impayee}
+              </Text>
+              {dettesList.map((d, idx) => (
+                <View key={d._id || idx} style={styles.listRow}>
+                  <Text style={{ width: "70%" }}>{d.description ?? "—"}</Text>
+                  <Text style={{ width: "30%", textAlign: "right" }}>
+                    {formatMoney(d.montant)}{d.status ? ` — ${d.status}` : ""}
+                  </Text>
+                </View>
+              ))}
+            </>
           )}
         </View>
 

@@ -93,3 +93,11 @@ export const POST = withAuth(async (req) => {
     }, { status: 500 });
   }
 });
+
+export const GET = withAuth(async (req) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+});

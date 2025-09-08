@@ -1,11 +1,11 @@
 // pages/api/rapport-compta/[id].js
 import RapportCompta from "@/models/RapportCompta.Model";
 import Business from "@/models/Business.Model";
-import { withAuthAndRole } from "@/utils/withAuthAndRole";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/utils/withAuth";
 
-export const GET = withAuthAndRole(async (req, { params }) => {
+export const GET = withAuth(async (req, { params }) => {
   try {
     const { id } = await params;
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -69,48 +69,68 @@ export const GET = withAuthAndRole(async (req, { params }) => {
       dettes = doc?.dettes || [];
     }
 
-    // 6) PLATEFORMES (fallback par nom)
+    // 6) PLATEFORMES (fallback par nom puis fallback complet)
     const PLATFORM_NAMES = ["Wafacash","Ria BIS","Orange Money","Free Money","Wizall"];
     const plateformesResults = await Promise.all(
       PLATFORM_NAMES.map(async (nom) => {
-        // d'abord dans rapport courant
         const found = Array.isArray(rapport.plateformes)
           ? rapport.plateformes.find(p => p.nom === nom)
           : null;
         if (found) return found;
-        // sinon fallback
         const doc = await fetchLast({ "plateformes.nom": nom });
         return doc?.plateformes?.find(p => p.nom === nom) || null;
       })
     );
-    const plateformes = plateformesResults.filter(Boolean);
+    let plateformes = plateformesResults.filter(Boolean);
 
-    // 7) On enrichit les entrées avec le nom du business
-    const businessIds = cpEntreesRaw
+    // si on n'a rien via la sélection par noms, on prend toute la liste du rapport courant
+    if (plateformes.length === 0) {
+      if (Array.isArray(rapport.plateformes) && rapport.plateformes.length > 0) {
+        plateformes = rapport.plateformes;
+      } else {
+        const doc = await fetchLast({ "plateformes.0": { $exists: true } });
+        plateformes = doc?.plateformes || [];
+      }
+    }
+
+    // 7) On enrichit les entrées avec le nom du business (et on conserve l'_id si pas de name)
+    const businessIds = (cpEntreesRaw || [])
       .map(e => e.business)
       .filter(id => mongoose.Types.ObjectId.isValid(id))
       .map(id => id.toString());
     const uniqueBizIds = [...new Set(businessIds)];
 
-    const bizDocs = await Business.find(
-      { _id: { $in: uniqueBizIds } },
-      { name: 1 }
-    ).lean();
+    const bizDocs = uniqueBizIds.length > 0
+      ? await Business.find({ _id: { $in: uniqueBizIds } }, { name: 1 }).lean()
+      : [];
     const nameById = bizDocs.reduce((acc, b) => {
       acc[b._id.toString()] = b.name;
       return acc;
     }, {});
 
-    const cpEntrees = cpEntreesRaw.map(e => ({
-      _id: e._id,
-      business: e.business && nameById[e.business.toString()]
-        ? { _id: e.business, name: nameById[e.business.toString()] }
-        : null,
-      description: e.description,
-      montant: e.montant
-    }));
+    const cpEntrees = (cpEntreesRaw || []).map(e => {
+      const bizId = e.business ? e.business.toString() : null;
+      return {
+        _id: e._id,
+        business: bizId
+          ? (nameById[bizId]
+              ? { _id: e.business, name: nameById[bizId] } // id + name
+              : { _id: e.business } // on conserve l'id si pas de name
+            )
+          : null,
+        description: e.description,
+        montant: e.montant
+      };
+    });
 
-    // 8) On reconstruit la structure finale
+    // 8) VERSEMENT (ajouté)
+    let versement = rapport.versement ?? null;
+    if (!versement) {
+      const doc = await fetchLast({ "versement.method": { $exists: true } });
+      versement = doc?.versement || null;
+    }
+
+    // 9) On reconstruit la structure finale
     const complete = {
       ...rapport,
       banques,
@@ -120,7 +140,8 @@ export const GET = withAuthAndRole(async (req, { params }) => {
         sorties: cpSorties
       },
       dettes,
-      plateformes
+      plateformes,
+      versement
     };
 
     return NextResponse.json({
@@ -138,3 +159,4 @@ export const GET = withAuthAndRole(async (req, { params }) => {
     }, { status: 500 });
   }
 });
+
