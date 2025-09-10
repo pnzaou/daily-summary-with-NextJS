@@ -96,6 +96,11 @@ export default function RapportFormCompta({ business = [], className, ...props }
               Dettes
             </Button>
           </Link>
+          <Link href="/dashboard/historique-dettes">
+            <Button>
+              Dettes quincaillerie
+            </Button>
+          </Link>
         </div>
         <Card>
           <CardHeader>
