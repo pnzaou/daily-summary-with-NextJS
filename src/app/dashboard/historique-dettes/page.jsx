@@ -45,6 +45,8 @@ export default function DebtsPage() {
   }
   if (status === 'unauthenticated') return null;
 
+  console.log(data)
+
   return (
     <div className="mt-16 p-4">
       <Link href="/dashboard">
