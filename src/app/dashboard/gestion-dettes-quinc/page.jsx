@@ -17,34 +17,41 @@ export default function DebtsManagePage() {
   const today = new Date().toISOString().split("T")[0];
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [advanceMap, setAdvanceMap] = useState({});
+
+  // Dernière réponse reçue : le chargement est en cours tant qu'elle ne correspond pas
+  // aux dates choisies ; reloadKey force un rechargement après une action
+  const [reloadKey, setReloadKey] = useState(0);
+  const query = `/api/debts?start=${startDate}&end=${endDate}&type=dette`;
+  const requestKey = `${query}#${reloadKey}`;
+  const [result, setResult] = useState({ key: null, data: [] });
+  const data = result.data;
+  const loading = result.key !== requestKey;
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/");
   }, [status, router]);
 
-  const fetchDebts = async () => {
-    if (status !== "authenticated") return;
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/debts?start=${startDate}&end=${endDate}&type=dette`
-      );
-      const json = await res.json();
-      setData(json.data || []);
-    } catch (err) {
-      console.error(err);
-      toast.error("Erreur lors du chargement des dettes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const reloadDebts = () => setReloadKey((k) => k + 1);
 
   useEffect(() => {
-    fetchDebts();
-  }, [status, startDate, endDate]);
+    if (status !== "authenticated") return;
+
+    // ignore la réponse si les dates ont changé entre-temps
+    let ignore = false;
+    fetch(query)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!ignore) setResult({ key: requestKey, data: json.data || [] });
+      })
+      .catch((err) => {
+        console.error(err);
+        if (ignore) return;
+        toast.error("Erreur lors du chargement des dettes");
+        setResult((prev) => ({ ...prev, key: requestKey }));
+      });
+    return () => { ignore = true; };
+  }, [status, query, requestKey]);
 
   const formatCurrency = (v) => {
     if (v === undefined || v === null) return "-";
@@ -69,7 +76,7 @@ export default function DebtsManagePage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Erreur serveur");
       toast.success("Dette supprimée");
-      fetchDebts();
+      reloadDebts();
     } catch (err) {
       console.error(err);
       toast.error("Impossible de supprimer la dette");
@@ -100,7 +107,7 @@ export default function DebtsManagePage() {
       if (!res.ok) throw new Error(json?.message || "Erreur serveur");
       toast.success("Avance appliquée");
       setAdvanceMap((prev) => ({ ...prev, [key]: "" }));
-      fetchDebts();
+      reloadDebts();
     } catch (err) {
       console.error(err);
       toast.error("Impossible d'appliquer l'avance");
@@ -145,7 +152,7 @@ export default function DebtsManagePage() {
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
-            <Button onClick={fetchDebts} className="mt-2 sm:mt-6">
+            <Button onClick={reloadDebts} className="mt-2 sm:mt-6">
               Rafraîchir
             </Button>
           </div>

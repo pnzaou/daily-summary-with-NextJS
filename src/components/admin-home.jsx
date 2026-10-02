@@ -104,7 +104,7 @@ export default function AdminHome({ reportData }) {
 
   const renderPlateformesCards = () => (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-      <h3 className="col-span-full text-xl font-semibold">Transfert d'argent</h3>
+      <h3 className="col-span-full text-xl font-semibold">Transfert d&apos;argent</h3>
       {lastCompta.plateformes.map(p => (
         <div key={p.nom} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
           <div className="font-semibold mb-1">{p.nom}</div>
@@ -141,10 +141,10 @@ export default function AdminHome({ reportData }) {
         </Link>
       </div>
       <div className="bg-blue-50 dark:bg-blue-900 shadow rounded-lg p-4 mb-6">
-        <h3 className="text-xl font-semibold mb-2">Chiffre d'affaires global</h3>
+        <h3 className="text-xl font-semibold mb-2">Chiffre d&apos;affaires global</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div className="text-sm">Aujourd'hui</div>
+            <div className="text-sm">Aujourd&apos;hui</div>
             <div className="text-2xl font-semibold">{formatMoney(caGlobal.day)}</div>
           </div>
           <div>

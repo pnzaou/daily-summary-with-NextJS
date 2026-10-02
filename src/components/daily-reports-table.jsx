@@ -25,15 +25,18 @@ export default function DailyReportsTable() {
       : "-";
 
   useEffect(() => {
-    setPage(p => Math.min(Math.max(p, 1), totalPages))
+    // ignore la réponse si la page ou les filtres ont changé entre-temps
+    let ignore = false;
     const params = new URLSearchParams({ page, limit, from, to });
     fetch(`/api/daily-reports?${params}`)
       .then((res) => res.json())
       .then((data) => {
-        console.log(data.data);
+        if (ignore || !data.success) return;
         setReports(data.data.docs);
         setTotal(data.data.total);
-      });
+      })
+      .catch(console.error);
+    return () => { ignore = true; };
   }, [page, limit, from, to]);
 
   return (
@@ -47,7 +50,7 @@ export default function DailyReportsTable() {
             id="from"
             type="date"
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onChange={(e) => { setFrom(e.target.value); setPage(1); }}
             className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black transition"
           />
         </div>
@@ -59,7 +62,7 @@ export default function DailyReportsTable() {
             id="to"
             type="date"
             value={to}
-            onChange={(e) => setTo(e.target.value)}
+            onChange={(e) => { setTo(e.target.value); setPage(1); }}
             className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black transition"
           />
         </div>

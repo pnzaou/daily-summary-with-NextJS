@@ -130,7 +130,7 @@ export default function RapportComptaPdfDocument({ report }) {
                 Date : {date ? new Date(date).toLocaleDateString("fr-FR") : "—"}
               </Text>
               <Text style={[styles.meta, styles.smallSpacing]}>
-                Généré depuis l'application
+                Généré depuis l&apos;application
               </Text>
 
               <Text style={[styles.meta, { marginTop: 6 }]}>
@@ -224,7 +224,7 @@ export default function RapportComptaPdfDocument({ report }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Transferts d'argent (Plateformes)</Text>
+          <Text style={styles.cardTitle}>Transferts d&apos;argent (Plateformes)</Text>
           {plateformesList.length === 0 ? (
             <Text>—</Text>
           ) : (
