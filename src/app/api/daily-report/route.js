@@ -1,17 +1,15 @@
-import authOptions from "@/lib/auth"
 import dbConnection from "@/lib/db"
 import DailyReport from "@/models/DailyReport.Model"
-import { withAuth } from "@/utils/withAuth"
+import User from "@/models/User.model"
+import { withRoles } from "@/utils/withRoles"
 import mongoose from "mongoose"
-import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
 
-export const POST = withAuth(async (req) => {
+export const POST = withRoles(["gerant", "admin"], async (req, context, session) => {
   try {
     await dbConnection();
 
-    const session = await getServerSession(authOptions);
     const { id: gerantId } = session?.user ?? {};
     if (!gerantId || !mongoose.Types.ObjectId.isValid(gerantId)) {
       return NextResponse.json(
@@ -41,6 +39,18 @@ export const POST = withAuth(async (req) => {
         },
         { status: 400 }
       );
+    }
+
+    // un gérant ne peut déclarer que pour ses propres activités
+    if (session.user.role === "gerant") {
+      const user = await User.findById(gerantId).select("businesses").lean();
+      const isOwnBusiness = (user?.businesses || []).some((b) => b.toString() === business);
+      if (!isOwnBusiness) {
+        return NextResponse.json(
+          { message: "Vous n'êtes pas rattaché à cette activité.", success: false, error: true },
+          { status: 403 }
+        );
+      }
     }
 
     // helper to normalize & filter out empty entries
@@ -121,7 +131,7 @@ export const POST = withAuth(async (req) => {
   }
 });
 
-export const GET = withAuth(async (req) => {
+export const GET = withRoles(["admin"], async (req) => {
     try {
         await dbConnection()
 

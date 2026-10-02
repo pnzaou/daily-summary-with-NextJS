@@ -1,11 +1,15 @@
 import dbConnection from "@/lib/db"
 import DailyReport from "@/models/DailyReport.Model"
-import { withAuth } from "@/utils/withAuth"
+import { withRoles } from "@/utils/withRoles"
 import mongoose from "mongoose"
 import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
 
-export const GET = withAuth(async (req, {params}) => {
+// Un gérant n'accède qu'à ses propres rapports
+const isForeignReport = (report, session) =>
+    session.user.role === "gerant" && report.gerant?.toString() !== session.user.id
+
+export const GET = withRoles(["admin", "comptable", "gerant"], async (req, {params}, session) => {
     try {
         await dbConnection()
         const { id } = await params
@@ -28,6 +32,14 @@ export const GET = withAuth(async (req, {params}) => {
                 success: false,
                 error: true
             }, { status: 404 })
+        }
+
+        if (isForeignReport(dailyReport, session)) {
+            return NextResponse.json({
+                message: "Accès refusé !",
+                success: false,
+                error: true
+            }, { status: 403 })
         }
 
         return NextResponse.json({
@@ -59,7 +71,7 @@ export const GET = withAuth(async (req, {params}) => {
     }
 })
 
-export const PUT = withAuth(async (req, {params}) => {
+export const PUT = withRoles(["admin", "gerant"], async (req, {params}, session) => {
     try {
         await dbConnection()
         const { id } = await params
@@ -95,6 +107,14 @@ export const PUT = withAuth(async (req, {params}) => {
                 },
                 { status: 404 }
             );
+        }
+
+        if (isForeignReport(report, session)) {
+            return NextResponse.json({
+                message: "Accès refusé !",
+                success: false,
+                error: true
+            }, { status: 403 })
         }
 
         if(body.hasOwnProperty("sales")) report.sales = sales

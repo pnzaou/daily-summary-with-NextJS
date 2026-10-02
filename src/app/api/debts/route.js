@@ -1,10 +1,11 @@
 import dbConnection from "@/lib/db";
 import DailyReport from "@/models/DailyReport.Model";
 import Business from "@/models/Business.Model";
+import User from "@/models/User.model";
 import { NextResponse } from "next/server";
 import { withAuth } from "@/utils/withAuth";
 
-export const GET = withAuth(async (req) => {
+export const GET = withAuth(async (req, context, session) => {
   try {
     await dbConnection();
     const { searchParams } = new URL(req.url);
@@ -23,12 +24,19 @@ export const GET = withAuth(async (req) => {
       end = new Date(now.setHours(23, 59, 59, 999));
     }
 
+    // un gérant ne voit que les dettes de ses propres quincailleries
+    const match = { date: { $gte: start, $lte: end } };
+    if (session.user.role === 'gerant') {
+      const user = await User.findById(session.user.id).select('businesses').lean();
+      match.business = { $in: user?.businesses || [] };
+    }
+
     const pipelines = [];
 
     if (typeParam === 'all' || typeParam === 'dette') {
       pipelines.push(
         DailyReport.aggregate([
-          { $match: { date: { $gte: start, $lte: end } } },
+          { $match: match },
           { $unwind: '$debts' },
           { $lookup: {
               from: 'businesses',
@@ -53,7 +61,7 @@ export const GET = withAuth(async (req) => {
     if (typeParam === 'all' || typeParam === 'reglement') {
       pipelines.push(
         DailyReport.aggregate([
-          { $match: { date: { $gte: start, $lte: end } } },
+          { $match: match },
           { $unwind: '$reglementDebts' },
           { $lookup: {
               from: 'businesses',

@@ -1,10 +1,10 @@
 // pages/api/location-entries.js
 import dbConnection from "@/lib/db";
-import { withAuth } from "@/utils/withAuth";
+import { withRoles } from "@/utils/withRoles";
 import RapportCompta from "@/models/RapportCompta.Model";
 import { NextResponse } from "next/server";
 
-export const GET = withAuth(async (req) => {
+export const GET = withRoles(["admin", "comptable"], async (req) => {
   try {
     await dbConnection();
 

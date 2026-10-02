@@ -1,12 +1,12 @@
 // pages/api/dashboard-data.js
 import dbConnection from "@/lib/db";
-import { withAuth } from "@/utils/withAuth";
+import { withRoles } from "@/utils/withRoles";
 import DailyReport from "@/models/DailyReport.Model";
 import RapportCompta from "@/models/RapportCompta.Model";
 import { NextResponse } from "next/server";
 import Business from "@/models/Business.Model";
 
-export const GET = withAuth(async (req) => {
+export const GET = withRoles(["admin", "comptable"], async (req) => {
   try {
     await dbConnection();
 

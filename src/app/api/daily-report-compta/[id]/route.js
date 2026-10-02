@@ -3,10 +3,10 @@ import RapportCompta from "@/models/RapportCompta.Model";
 import Business from "@/models/Business.Model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
-import { withAuth } from "@/utils/withAuth";
+import { withRoles } from "@/utils/withRoles";
 import dbConnection from "@/lib/db";
 
-export const GET = withAuth(async (req, { params }) => {
+export const GET = withRoles(["comptable", "admin"], async (req, { params }) => {
   try {
     await dbConnection();
     const { id } = await params;
