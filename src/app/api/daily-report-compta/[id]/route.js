@@ -4,9 +4,11 @@ import Business from "@/models/Business.Model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 import { withAuth } from "@/utils/withAuth";
+import dbConnection from "@/lib/db";
 
 export const GET = withAuth(async (req, { params }) => {
   try {
+    await dbConnection();
     const { id } = await params;
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({

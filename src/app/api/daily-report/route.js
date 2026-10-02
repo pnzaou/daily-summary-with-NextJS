@@ -144,7 +144,7 @@ export const GET = withAuth(async (req) => {
                         revenueCash: 1,
                         revenueOrangeMoney: 1,
                         revenueWave: 1,
-                        sortieCaisse: 1,
+                        sortieCaisseSum: { $sum: "$sortieCaisse.total" },
                         versementTataDiara: 1,
 
                         salesCount: { $size: "$sales" },
@@ -161,7 +161,7 @@ export const GET = withAuth(async (req) => {
                         totalOM: { $sum: "$revenueOrangeMoney" },
                         totalWave: { $sum: "$revenueWave" },
 
-                        totalSortieCaisse: { $sum: "$sortieCaisse" },
+                        totalSortieCaisse: { $sum: "$sortieCaisseSum" },
                         totalVersementTataDiara: { $sum: "$versementTataDiara" },
 
                         totalSalesCount: { $sum: "$salesCount" },
