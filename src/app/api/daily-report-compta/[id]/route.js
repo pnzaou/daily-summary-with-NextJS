@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 import { withRoles } from "@/utils/withRoles";
 import dbConnection from "@/lib/db";
+import { PLATEFORMES } from "@/lib/constants";
 
 export const GET = withRoles(["comptable", "admin"], async (req, { params }) => {
   try {
@@ -72,9 +73,8 @@ export const GET = withRoles(["comptable", "admin"], async (req, { params }) => 
     }
 
     // 6) PLATEFORMES (fallback par nom puis fallback complet)
-    const PLATFORM_NAMES = ["Wafacash","Ria BIS","Orange Money","Free Money","Wizall"];
     const plateformesResults = await Promise.all(
-      PLATFORM_NAMES.map(async (nom) => {
+      PLATEFORMES.map(async (nom) => {
         const found = Array.isArray(rapport.plateformes)
           ? rapport.plateformes.find(p => p.nom === nom)
           : null;

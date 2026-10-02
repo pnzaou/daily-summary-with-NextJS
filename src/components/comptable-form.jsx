@@ -17,20 +17,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import Link from "next/link";
-
-// Données statiques
-const BANQUES = [
-  { id: "b1", nom: "CBAO" },
-  { id: "b2", nom: "BIS" },
-  { id: "b3", nom: "UBA" },
-];
-const PLATEFORMES = [
-  { id: "p1", nom: "Wafacash" },
-  { id: "p2", nom: "Ria BIS" },
-  { id: "p3", nom: "Orange Money" },
-  { id: "p4", nom: "Free Money" },
-  { id: "p5", nom: "Wizall" },
-];
+import { BANQUES, PLATEFORMES } from "@/lib/constants";
 
 // Enum versement (même values que dans le schema)
 const VERSEMENT_METHODS = ["espèces", "wave", "orange money"];
@@ -124,8 +111,8 @@ export default function RapportFormCompta({ business = [], className, ...props }
                           <Label>Banque {idx + 1}</Label>
                           <select {...register(`banques.${idx}.nom`)} className="input">
                             <option value="">Sélectionner</option>
-                            {BANQUES.map(b => (
-                              <option key={b.id} value={b.nom}>{b.nom}</option>
+                            {BANQUES.map(nom => (
+                              <option key={nom} value={nom}>{nom}</option>
                             ))}
                           </select>
                         </div>
@@ -303,8 +290,8 @@ function PlatformSection({ index, control, register, watch, remove }) {
           <Label>Plateforme {index + 1}</Label>
           <select {...register(`plateformes.${index}.nom`)} className="input">
             <option value="">Sélectionner</option>
-            {PLATEFORMES.map(p => (
-              <option key={p.id} value={p.nom}>{p.nom}</option>
+            {PLATEFORMES.map(nom => (
+              <option key={nom} value={nom}>{nom}</option>
             ))}
           </select>
         </div>

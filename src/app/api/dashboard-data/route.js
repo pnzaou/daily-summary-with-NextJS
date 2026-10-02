@@ -5,6 +5,7 @@ import DailyReport from "@/models/DailyReport.Model";
 import RapportCompta from "@/models/RapportCompta.Model";
 import { NextResponse } from "next/server";
 import Business from "@/models/Business.Model";
+import { COMMISSION_ASSURANCE, LOCATIONS, PLATEFORMES, QUINCAILLERIES } from "@/lib/constants";
 
 export const GET = withRoles(["admin", "comptable"], async (req) => {
   try {
@@ -61,7 +62,7 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
     async function aggregateAssuranceCommission() {
       const now      = new Date();
       const startMon = new Date(now.getFullYear(), now.getMonth(), 1);
-      const biz = await Business.findOne({ name: "Commission assurance" }).lean();
+      const biz = await Business.findOne({ name: COMMISSION_ASSURANCE }).lean();
       if (!biz) return 0;
       const [{ total = 0 } = {}] = await RapportCompta.aggregate([
         { $match: { date: { $gte: startMon } } },
@@ -207,15 +208,8 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
     }
 
     // --- PLATEFORMES : liste fixe et fallback par nom ---
-    const platformNames = [
-      "Wafacash",
-      "Ria BIS",
-      "Orange Money",
-      "Free Money",
-      "Wizall"
-    ];
     const plateformes = await Promise.all(
-      platformNames.map(async (nom) => {
+      PLATEFORMES.map(async (nom) => {
         // on cherche d'abord dans le tout dernier rapport
         let p = lastCompta?.plateformes?.find(p => p.nom === nom);
         // si la plateforme n'existe pas dans le dernier rapport,
@@ -244,8 +238,8 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
     const plateformesClean = plateformes.filter(Boolean);
 
     // --- Calcul des totaux DailyReport et CA global ---
-    const quincailleries = ["Quincaillerie 1", "Quincaillerie 2"];
-    const locations      = ["Appartement F4", "Appartement F3", "Mazda", "Sontafe Rouge", "Sontafe Bleu"];
+    const quincailleries = QUINCAILLERIES;
+    const locations      = LOCATIONS;
 
     const drTotals = {
       plain: {
