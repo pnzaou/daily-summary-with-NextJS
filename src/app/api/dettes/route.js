@@ -1,9 +1,9 @@
 const { default: dbConnection } = require("@/lib/db");
 const { default: RapportCompta } = require("@/models/RapportCompta.Model");
-const { withAuth } = require("@/utils/withAuth");
+const { withRoles } = require("@/utils/withRoles");
 const { NextResponse } = require("next/server");
 
-export const GET = withAuth(async (req) => {
+export const GET = withRoles(["comptable", "admin"], async (req) => {
   try {
     await dbConnection();
 

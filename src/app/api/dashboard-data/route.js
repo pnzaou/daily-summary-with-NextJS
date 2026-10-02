@@ -1,12 +1,13 @@
 // pages/api/dashboard-data.js
 import dbConnection from "@/lib/db";
-import { withAuth } from "@/utils/withAuth";
+import { withRoles } from "@/utils/withRoles";
 import DailyReport from "@/models/DailyReport.Model";
 import RapportCompta from "@/models/RapportCompta.Model";
 import { NextResponse } from "next/server";
 import Business from "@/models/Business.Model";
+import { COMMISSION_ASSURANCE, LOCATIONS, PLATEFORMES, QUINCAILLERIES } from "@/lib/constants";
 
-export const GET = withAuth(async (req) => {
+export const GET = withRoles(["admin", "comptable"], async (req) => {
   try {
     await dbConnection();
 
@@ -61,7 +62,7 @@ export const GET = withAuth(async (req) => {
     async function aggregateAssuranceCommission() {
       const now      = new Date();
       const startMon = new Date(now.getFullYear(), now.getMonth(), 1);
-      const biz = await Business.findOne({ name: "Commission assurance" }).lean();
+      const biz = await Business.findOne({ name: COMMISSION_ASSURANCE }).lean();
       if (!biz) return 0;
       const [{ total = 0 } = {}] = await RapportCompta.aggregate([
         { $match: { date: { $gte: startMon } } },
@@ -97,6 +98,8 @@ export const GET = withAuth(async (req) => {
             revenueCash: 1,
             revenueOrangeMoney: 1,
             revenueWave: 1,
+            versementTataDiara: 1,
+            salesCount: { $size: { $ifNull: ["$sales", []] } },
             debtsSum: { $sum: "$debts.total" },
             regDebtsSum: { $sum: "$reglementDebts.total" },
           },
@@ -107,6 +110,8 @@ export const GET = withAuth(async (req) => {
             totalCash: { $sum: "$revenueCash" },
             totalOM: { $sum: "$revenueOrangeMoney" },
             totalWave: { $sum: "$revenueWave" },
+            totalSalesCount: { $sum: "$salesCount" },
+            totalVersementTataDiara: { $sum: "$versementTataDiara" },
             totalDebts: { $sum: "$debtsSum" },
             totalRegDebts: { $sum: "$regDebtsSum" },
           },
@@ -118,6 +123,8 @@ export const GET = withAuth(async (req) => {
           totalCash: 0,
           totalOM: 0,
           totalWave: 0,
+          totalSalesCount: 0,
+          totalVersementTataDiara: 0,
           totalDebts: 0,
           totalRegDebts: 0,
         }
@@ -201,15 +208,8 @@ export const GET = withAuth(async (req) => {
     }
 
     // --- PLATEFORMES : liste fixe et fallback par nom ---
-    const platformNames = [
-      "Wafacash",
-      "Ria BIS",
-      "Orange Money",
-      "Free Money",
-      "Wizall"
-    ];
     const plateformes = await Promise.all(
-      platformNames.map(async (nom) => {
+      PLATEFORMES.map(async (nom) => {
         // on cherche d'abord dans le tout dernier rapport
         let p = lastCompta?.plateformes?.find(p => p.nom === nom);
         // si la plateforme n'existe pas dans le dernier rapport,
@@ -238,8 +238,8 @@ export const GET = withAuth(async (req) => {
     const plateformesClean = plateformes.filter(Boolean);
 
     // --- Calcul des totaux DailyReport et CA global ---
-    const quincailleries = ["Quincaillerie 1", "Quincaillerie 2"];
-    const locations      = ["Appartement F4", "Appartement F3", "Mazda", "Sontafe Rouge", "Sontafe Bleu"];
+    const quincailleries = QUINCAILLERIES;
+    const locations      = LOCATIONS;
 
     const drTotals = {
       plain: {

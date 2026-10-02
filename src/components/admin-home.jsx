@@ -46,7 +46,7 @@ export default function AdminHome({ reportData }) {
               <div className="text-sm">Wave: {formatMoney(t.totalWave || 0)}</div>
               <div className="text-sm">Orange Money: {formatMoney(t.totalOM || 0)}</div>
               <div className="text-sm">Règlement dettes: {formatMoney(t.totalRegDebts || 0)}</div>
-              <div className="font-semibold mt-1">Total entrées: {incoming}</div>
+              <div className="font-semibold mt-1">Total entrées: {formatMoney(incoming)}</div>
               <hr className="my-2" />
               <div className="text-sm">Dettes: {formatMoney(t.totalDebts || 0)}</div>
               <div className="text-sm">Versements Tata: {formatMoney(t.totalVersementTataDiara || 0)}</div>

@@ -4,6 +4,7 @@ import dbConnection from "@/lib/db";
 import { preparingServerSideRequest } from "@/utils/preparingServerRequest";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import React from "react";
 
 const page = async () => {

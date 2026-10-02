@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getServerSession } from 'next-auth';
 import authOptions from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 // Utilitaire pour formater les dates
 const formatDate = (date) => {

@@ -1,9 +1,9 @@
 import dbConnection from "@/lib/db";
 import RapportCompta from "@/models/RapportCompta.Model";
-import { withAuth } from "@/utils/withAuth";
+import { withRoles } from "@/utils/withRoles";
 import { NextResponse } from "next/server";
 
-export const PATCH = withAuth(async (req) => {
+export const PATCH = withRoles(["comptable", "admin"], async (req) => {
   try {
     const { rapportId, detteId, type } = await req.json();
     await dbConnection();

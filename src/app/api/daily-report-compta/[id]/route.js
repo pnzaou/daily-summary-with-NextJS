@@ -3,10 +3,13 @@ import RapportCompta from "@/models/RapportCompta.Model";
 import Business from "@/models/Business.Model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
-import { withAuth } from "@/utils/withAuth";
+import { withRoles } from "@/utils/withRoles";
+import dbConnection from "@/lib/db";
+import { PLATEFORMES } from "@/lib/constants";
 
-export const GET = withAuth(async (req, { params }) => {
+export const GET = withRoles(["comptable", "admin"], async (req, { params }) => {
   try {
+    await dbConnection();
     const { id } = await params;
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({
@@ -70,9 +73,8 @@ export const GET = withAuth(async (req, { params }) => {
     }
 
     // 6) PLATEFORMES (fallback par nom puis fallback complet)
-    const PLATFORM_NAMES = ["Wafacash","Ria BIS","Orange Money","Free Money","Wizall"];
     const plateformesResults = await Promise.all(
-      PLATFORM_NAMES.map(async (nom) => {
+      PLATEFORMES.map(async (nom) => {
         const found = Array.isArray(rapport.plateformes)
           ? rapport.plateformes.find(p => p.nom === nom)
           : null;

@@ -1,10 +1,11 @@
 // app/api/debts/modify/route.js
 import dbConnection from "@/lib/db";
 import DailyReport from "@/models/DailyReport.Model";
-import { withAuth } from "@/utils/withAuth";
+import User from "@/models/User.model";
+import { withRoles } from "@/utils/withRoles";
 import { NextResponse } from "next/server";
 
-export const POST = withAuth(async (req) => {
+export const POST = withRoles(["gerant", "admin"], async (req, context, session) => {
   try {
     await dbConnection();
     const body = await req.json();
@@ -20,6 +21,15 @@ export const POST = withAuth(async (req) => {
       return NextResponse.json({ message: "DailyReport introuvable." }, { status: 404 });
     }
 
+    // un gérant ne règle que les dettes de ses propres quincailleries
+    if (session.user.role === "gerant") {
+      const user = await User.findById(session.user.id).select("businesses").lean();
+      const isOwnBusiness = (user?.businesses || []).some((b) => b.toString() === report.business.toString());
+      if (!isOwnBusiness) {
+        return NextResponse.json({ message: "Cette dette n'appartient pas à votre quincaillerie.", error: true }, { status: 403 });
+      }
+    }
+
     // cherche la dette (par ref)
     const debtIndex = report.debts.findIndex(d => d.ref === ref);
     if (debtIndex === -1) {
@@ -31,7 +41,6 @@ export const POST = withAuth(async (req) => {
     if (action === "delete") {
       // suppression complète de la dette
       report.debts.splice(debtIndex, 1);
-      console.log("teeeeeeeeeeeeeeeeeeeeeeeeeeeeest")
       await report.save();
       return NextResponse.json({ message: "Dette supprimée (réglée).", success: true }, { status: 200 });
     }

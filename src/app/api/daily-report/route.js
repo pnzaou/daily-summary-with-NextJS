@@ -1,17 +1,18 @@
-import authOptions from "@/lib/auth"
 import dbConnection from "@/lib/db"
 import DailyReport from "@/models/DailyReport.Model"
-import { withAuth } from "@/utils/withAuth"
+import User from "@/models/User.model"
+import { withRoles } from "@/utils/withRoles"
 import mongoose from "mongoose"
-import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
 
-export const POST = withAuth(async (req) => {
+const DUPLICATE_MESSAGE =
+  "Un rapport a déjà été envoyé aujourd'hui pour cette activité. Modifiez-le depuis « Voir mes rapports »."
+
+export const POST = withRoles(["gerant", "admin"], async (req, context, session) => {
   try {
     await dbConnection();
 
-    const session = await getServerSession(authOptions);
     const { id: gerantId } = session?.user ?? {};
     if (!gerantId || !mongoose.Types.ObjectId.isValid(gerantId)) {
       return NextResponse.json(
@@ -40,6 +41,28 @@ export const POST = withAuth(async (req) => {
           error: true,
         },
         { status: 400 }
+      );
+    }
+
+    // un gérant ne peut déclarer que pour ses propres activités
+    if (session.user.role === "gerant") {
+      const user = await User.findById(gerantId).select("businesses").lean();
+      const isOwnBusiness = (user?.businesses || []).some((b) => b.toString() === business);
+      if (!isOwnBusiness) {
+        return NextResponse.json(
+          { message: "Vous n'êtes pas rattaché à cette activité.", success: false, error: true },
+          { status: 403 }
+        );
+      }
+    }
+
+    // un seul rapport par gérant, activité et jour (début de journée, comme le défaut du modèle)
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    if (await DailyReport.exists({ business, gerant: gerantId, date })) {
+      return NextResponse.json(
+        { message: DUPLICATE_MESSAGE, success: false, error: true },
+        { status: 409 }
       );
     }
 
@@ -93,6 +116,7 @@ export const POST = withAuth(async (req) => {
     const newReport = await DailyReport.create({
       business,
       gerant: gerantId,
+      date,
       revenueCash:        Number(revenueCash),
       revenueOrangeMoney: Number(revenueOrangeMoney),
       revenueWave:        Number(revenueWave),
@@ -113,6 +137,13 @@ export const POST = withAuth(async (req) => {
       { status: 201 }
     );
   } catch (error) {
+    // doublon envoyé en même temps (rejeté par l'index unique)
+    if (error?.code === 11000) {
+      return NextResponse.json(
+        { message: DUPLICATE_MESSAGE, success: false, error: true },
+        { status: 409 }
+      );
+    }
     console.error("Erreur lors de la création du rapport: ", error);
     return NextResponse.json(
       { message: "Erreur ! Veuillez réessayer.", success: false, error: true },
@@ -121,7 +152,7 @@ export const POST = withAuth(async (req) => {
   }
 });
 
-export const GET = withAuth(async (req) => {
+export const GET = withRoles(["admin"], async (req) => {
     try {
         await dbConnection()
 
@@ -144,7 +175,7 @@ export const GET = withAuth(async (req) => {
                         revenueCash: 1,
                         revenueOrangeMoney: 1,
                         revenueWave: 1,
-                        sortieCaisse: 1,
+                        sortieCaisseSum: { $sum: "$sortieCaisse.total" },
                         versementTataDiara: 1,
 
                         salesCount: { $size: "$sales" },
@@ -161,7 +192,7 @@ export const GET = withAuth(async (req) => {
                         totalOM: { $sum: "$revenueOrangeMoney" },
                         totalWave: { $sum: "$revenueWave" },
 
-                        totalSortieCaisse: { $sum: "$sortieCaisse" },
+                        totalSortieCaisse: { $sum: "$sortieCaisseSum" },
                         totalVersementTataDiara: { $sum: "$versementTataDiara" },
 
                         totalSalesCount: { $sum: "$salesCount" },
