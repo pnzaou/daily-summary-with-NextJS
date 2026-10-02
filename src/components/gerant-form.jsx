@@ -496,7 +496,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                     </Button>
                   )}
                   {step <= 5 && (
-                    <Button type="submit">
+                    <Button type="submit" disabled={isLoading}>
                       {step === 5 ? (
                         isLoading ? (
                           <>
