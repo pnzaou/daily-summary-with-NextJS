@@ -1,6 +1,7 @@
 import dbConnection from '@/lib/db'
 import { withRoles } from '@/utils/withRoles'
 import DailyReport from '@/models/DailyReport.Model'
+import '@/models/Business.Model' // enregistre le modèle pour populate('business')
 import { NextResponse } from 'next/server'
 
 export const GET = withRoles(['admin', 'comptable'], async (req) => {
