@@ -6,6 +6,9 @@ import mongoose from "mongoose"
 import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
 
+const DUPLICATE_MESSAGE =
+  "Un rapport a déjà été envoyé aujourd'hui pour cette activité. Modifiez-le depuis « Voir mes rapports »."
+
 export const POST = withRoles(["gerant", "admin"], async (req, context, session) => {
   try {
     await dbConnection();
@@ -51,6 +54,16 @@ export const POST = withRoles(["gerant", "admin"], async (req, context, session)
           { status: 403 }
         );
       }
+    }
+
+    // un seul rapport par gérant, activité et jour (début de journée, comme le défaut du modèle)
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    if (await DailyReport.exists({ business, gerant: gerantId, date })) {
+      return NextResponse.json(
+        { message: DUPLICATE_MESSAGE, success: false, error: true },
+        { status: 409 }
+      );
     }
 
     // helper to normalize & filter out empty entries
@@ -103,6 +116,7 @@ export const POST = withRoles(["gerant", "admin"], async (req, context, session)
     const newReport = await DailyReport.create({
       business,
       gerant: gerantId,
+      date,
       revenueCash:        Number(revenueCash),
       revenueOrangeMoney: Number(revenueOrangeMoney),
       revenueWave:        Number(revenueWave),
@@ -123,6 +137,13 @@ export const POST = withRoles(["gerant", "admin"], async (req, context, session)
       { status: 201 }
     );
   } catch (error) {
+    // doublon envoyé en même temps (rejeté par l'index unique)
+    if (error?.code === 11000) {
+      return NextResponse.json(
+        { message: DUPLICATE_MESSAGE, success: false, error: true },
+        { status: 409 }
+      );
+    }
     console.error("Erreur lors de la création du rapport: ", error);
     return NextResponse.json(
       { message: "Erreur ! Veuillez réessayer.", success: false, error: true },

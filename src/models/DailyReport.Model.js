@@ -63,15 +63,14 @@ const DailyReportSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    // Pour empêcher plusieurs rapports pour un même manager/business/jour
-    indexes: [
-      {
-        fields: { business: 1, gerant: 1, date: 1 },
-        options: { unique: true },
-      },
-    ],
+    // Index créé manuellement (scripts/create-daily-report-index.mjs) et non au démarrage :
+    // la création échoue tant que la base contient des doublons
+    autoIndex: false,
   }
 );
+
+// Pour empêcher plusieurs rapports pour un même manager/business/jour
+DailyReportSchema.index({ business: 1, gerant: 1, date: 1 }, { unique: true });
 
 const DailyReport = mongoose.models.DailyReport || mongoose.model("DailyReport", DailyReportSchema);
 

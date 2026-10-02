@@ -138,6 +138,14 @@ export const PUT = withRoles(["admin", "gerant"], async (req, {params}, session)
         }, { status: 200 })
 
     } catch (error) {
+        // la nouvelle date entre en conflit avec un autre rapport (index unique)
+        if (error?.code === 11000) {
+            return NextResponse.json({
+                message: "Un rapport existe déjà pour cette activité à cette date.",
+                success: false,
+                error: true
+            }, { status: 409 })
+        }
         console.error("Erreur lors de la modification du rapport: ", error)
         return NextResponse.json({
             message: "Erreur! Veuillez réessayer.",
