@@ -220,7 +220,7 @@ export default function RapportFormCompta({ business = [], className, ...props }
               {/* STEP 4 – Plateformes + Versement */}
               {step === 4 && (
                 <div className="space-y-4">
-                  <h2 className="text-lg font-semibold">Transfert d'argent</h2>
+                  <h2 className="text-lg font-semibold">Transfert d&apos;argent</h2>
                   {plateformesArray.fields.map((f, idx) => (
                     <PlatformSection
                       key={f.id}

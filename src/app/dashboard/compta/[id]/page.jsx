@@ -14,7 +14,9 @@ export default function ComptaDetailPage() {
   const params = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [fetchError, setError] = useState(null);
+  const missingId = !params?.id;
+  const error = missingId ? "Identifiant du rapport manquant." : fetchError;
 
   // 2. Redirection si non authentifié
   useEffect(() => {
@@ -40,12 +42,7 @@ export default function ComptaDetailPage() {
 
   // 3. Chargement des détails une fois authentifié
   useEffect(() => {
-    if (status !== "authenticated") return;
-    if (!params?.id) {
-      setError("Identifiant du rapport manquant.");
-      setLoading(false);
-      return;
-    }
+    if (status !== "authenticated" || missingId) return;
 
     async function fetchDetail() {
       try {
@@ -67,7 +64,7 @@ export default function ComptaDetailPage() {
     }
 
     fetchDetail();
-  }, [status, params?.id]);
+  }, [status, missingId, params?.id]);
 
   // 4. Rendus conditionnels après tous les Hooks
   if (status === "loading") {
@@ -80,7 +77,7 @@ export default function ComptaDetailPage() {
   if (status === "unauthenticated") {
     return null;
   }
-  if (loading) {
+  if (loading && !missingId) {
     return (
       <div className="p-4 max-w-4xl mx-auto space-y-6">
         <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mb-4"></div>

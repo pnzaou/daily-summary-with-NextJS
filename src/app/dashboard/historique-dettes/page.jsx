@@ -25,9 +25,13 @@ export default function DebtsPage() {
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [filterType, setFilterType] = useState('all'); // 'all' | 'dette' | 'reglement'
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
+
+  // Dernière réponse reçue : le chargement est en cours tant qu'elle ne correspond pas aux filtres
+  const query = `/api/debts?start=${startDate}&end=${endDate}&type=${filterType}`;
+  const [result, setResult] = useState({ query: null, data: [] });
+  const data = result.data;
+  const loading = result.query !== query;
+
   // États pour l'impression
   const [printMode, setPrintMode] = useState(null);
   const [printType, setPrintType] = useState('all');
@@ -42,13 +46,19 @@ export default function DebtsPage() {
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    setLoading(true);
-    fetch(`/api/debts?start=${startDate}&end=${endDate}&type=${filterType}`)
+    // ignore la réponse si les filtres ont changé entre-temps
+    let ignore = false;
+    fetch(query)
       .then(res => res.json())
-      .then(json => setData(json.data || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [status, startDate, endDate, filterType]);
+      .then(json => {
+        if (!ignore) setResult({ query, data: json.data || [] });
+      })
+      .catch(err => {
+        console.error(err);
+        if (!ignore) setResult(prev => ({ ...prev, query }));
+      });
+    return () => { ignore = true; };
+  }, [status, query]);
 
   // Gestion de l'impression
   const handlePrint = (type) => {

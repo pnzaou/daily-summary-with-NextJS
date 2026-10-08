@@ -20,7 +20,7 @@ import {
   CommandItem,
 } from "./ui/command";
 import { Check } from "lucide-react";
-import { useForm, FormProvider, useFieldArray } from "react-hook-form";
+import { useForm, FormProvider, useFieldArray, useWatch } from "react-hook-form";
 import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -47,7 +47,6 @@ export default function GerantForm({ business = [], className, ...props }) {
     control,
     handleSubmit,
     setValue,
-    watch,
     trigger,
     reset,
     formState: {errors}
@@ -61,7 +60,7 @@ export default function GerantForm({ business = [], className, ...props }) {
   const regDebtsArray = useFieldArray({ control, name: "reglementDebts" });
   const sortieArray = useFieldArray({ control, name: "sortieCaisse" });
 
-  const selectedBusiness = watch("business");
+  const selectedBusiness = useWatch({ control, name: "business" });
 
   const refValidation = {
       pattern: /^(facture num \d+|ticket num \d+|reçu num \d+)$/i,
@@ -156,7 +155,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                     <div className="flex flex-col md:flex-row justify-between gap-6">
                       <div className="grid gap-3 flex-1">
                         <Label htmlFor="business">
-                          Sélectionner l'activité
+                          Sélectionner l&apos;activité
                         </Label>
                         <Popover>
                           <PopoverTrigger asChild>

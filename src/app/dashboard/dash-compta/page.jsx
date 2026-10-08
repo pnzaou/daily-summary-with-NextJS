@@ -51,7 +51,7 @@ const page = async () => {
   const renderPlateformesCards = () => (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
       <h3 className="col-span-full text-xl font-semibold">
-        Transfert d'argent
+        Transfert d&apos;argent
       </h3>
       {lastCompta.plateformes.map((p) => (
         <div

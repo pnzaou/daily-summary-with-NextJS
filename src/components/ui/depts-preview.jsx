@@ -54,7 +54,7 @@ export const DebtsPreview = ({ open, onOpenChange, data, type, startDate, endDat
             </h1>
             <div className="mt-2 text-sm text-gray-600">
               <p>Période : {formatDate(startDate)} - {formatDate(endDate)}</p>
-              <p>Date d'impression : {formatDate(new Date())}</p>
+              <p>Date d&apos;impression : {formatDate(new Date())}</p>
             </div>
           </div>
 
