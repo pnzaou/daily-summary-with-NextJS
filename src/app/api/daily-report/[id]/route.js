@@ -4,6 +4,7 @@ import { withRoles } from "@/utils/withRoles"
 import mongoose from "mongoose"
 import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
+import { cleanLines, cleanSortieLines } from "@/lib/report-lines"
 
 // Un gérant n'accède qu'à ses propres rapports
 const isForeignReport = (report, session) =>
@@ -117,10 +118,11 @@ export const PUT = withRoles(["admin", "gerant"], async (req, {params}, session)
             }, { status: 403 })
         }
 
-        if(body.hasOwnProperty("sales")) report.sales = sales
-        if(body.hasOwnProperty("debts")) report.debts = debts
-        if(body.hasOwnProperty("reglementDebts")) report.reglementDebts = reglementDebts
-        if(body.hasOwnProperty("sortieCaisse")) report.sortieCaisse = sortieCaisse 
+        // mêmes règles de nettoyage qu'à la création (lignes vides retirées, totaux numériques)
+        if(body.hasOwnProperty("sales")) report.sales = cleanLines(sales)
+        if(body.hasOwnProperty("debts")) report.debts = cleanLines(debts)
+        if(body.hasOwnProperty("reglementDebts")) report.reglementDebts = cleanLines(reglementDebts)
+        if(body.hasOwnProperty("sortieCaisse")) report.sortieCaisse = cleanSortieLines(sortieCaisse)
 
         if(body.hasOwnProperty("revenueCash") && typeof revenueCash === "number") report.revenueCash = revenueCash
         if(body.hasOwnProperty("revenueOrangeMoney") && typeof revenueOrangeMoney === "number") report.revenueOrangeMoney = revenueOrangeMoney

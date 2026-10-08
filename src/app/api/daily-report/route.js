@@ -5,6 +5,7 @@ import { withRoles } from "@/utils/withRoles"
 import mongoose from "mongoose"
 import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
+import { cleanLines, cleanSortieLines } from "@/lib/report-lines"
 
 const DUPLICATE_MESSAGE =
   "Un rapport a déjà été envoyé aujourd'hui pour cette activité. Modifiez-le depuis « Voir mes rapports »."
@@ -66,36 +67,10 @@ export const POST = withRoles(["gerant", "admin"], async (req, context, session)
       );
     }
 
-    // helper to normalize & filter out empty entries
-    function cleanArray(arr) {
-      return (Array.isArray(arr) ? arr : [])
-        .map((item) => ({
-          ref:         (item.ref || "").trim().toLowerCase(),
-          description: (item.description || "").trim(),
-          total:       Number(item.total) || 0,
-        }))
-        .filter(
-          ({ ref, description, total }) =>
-            ref !== "" || description !== "" || total > 0
-        );
-    }
-
-    function cleanSortie(arr) {
-      return (Array.isArray(arr) ? arr : [])
-        .map((item) => ({
-          description: (item.description || "").trim(),
-          total:       Number(item.total) || 0,
-        }))
-        .filter(
-          ({ description, total }) =>
-            description !== "" || total > 0
-        );
-    }
-
-    const cleanSales = cleanArray(sales);
-    const cleanDebts = cleanArray(debts);
-    const cleanRegs  = cleanArray(reglementDebts);
-    const cleanSortieCaisse = cleanSortie(sortieCaisse);
+    const cleanSales = cleanLines(sales);
+    const cleanDebts = cleanLines(debts);
+    const cleanRegs  = cleanLines(reglementDebts);
+    const cleanSortieCaisse = cleanSortieLines(sortieCaisse);
 
     // reglements groupés par ref
     const regsByRef = cleanRegs.reduce((map, { ref, total }) => {

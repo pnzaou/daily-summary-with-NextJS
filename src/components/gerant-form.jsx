@@ -54,6 +54,7 @@ export default function GerantForm({ business = [], className, ...props }) {
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [businessOpen, setBusinessOpen] = useState(false);
 
   const salesArray = useFieldArray({ control, name: "sales" });
   const debtsArray = useFieldArray({ control, name: "debts" });
@@ -157,7 +158,7 @@ export default function GerantForm({ business = [], className, ...props }) {
                         <Label htmlFor="business">
                           Sélectionner l&apos;activité
                         </Label>
-                        <Popover>
+                        <Popover open={businessOpen} onOpenChange={setBusinessOpen}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
@@ -178,7 +179,10 @@ export default function GerantForm({ business = [], className, ...props }) {
                                 {business.map((b) => (
                                   <CommandItem
                                     key={b.id}
-                                    onSelect={() => setValue("business", b.id)}
+                                    onSelect={() => {
+                                      setValue("business", b.id);
+                                      setBusinessOpen(false);
+                                    }}
                                   >
                                     {b.name}
                                     {selectedBusiness === b.id && (
