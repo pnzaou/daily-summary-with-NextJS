@@ -10,7 +10,7 @@ import DailyReportsTable from "./daily-reports-table";
  *   reportData: {
  *     dailyReports,
  *     banksCards,
- *     drTotals: { quincailleries, locations, plain },
+ *     drTotals: { quincailleries, boucheries, locations, plain },
  *     caGlobal: { day, month, year },
  *     commissions_assurance,
  *     lastCompta
@@ -170,6 +170,7 @@ export default function AdminHome({ reportData }) {
       {renderBankCards()}
 
       {renderFullCards("Quincailleries", drTotals.quincailleries)}
+      {renderFullCards("Boucherie", drTotals.boucheries)}
       {renderLocationCards()}
       {renderPlateformesCards()}
 

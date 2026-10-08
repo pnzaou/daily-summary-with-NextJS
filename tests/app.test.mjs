@@ -69,6 +69,20 @@ describe("Tableau de bord", () => {
     assert.equal(day.totalVersementTataDiara, 8000);
   });
 
+  it("la boucherie a sa propre section, regroupée par type", async () => {
+    const { body } = await api(cookies.admin, "GET", "/api/dashboard-data");
+    const day = body.data.drTotals.boucheries.day;
+    assert.equal(day.totalCash, 12000);
+    assert.equal(day.totalWave, 3000);
+    assert.equal(day.totalSalesCount, 2);
+  });
+
+  it("le CA global du jour inclut la boucherie", async () => {
+    const { body } = await api(cookies.admin, "GET", "/api/dashboard-data");
+    // rapports : 150 000 (Q1) + 50 000 (Q2) + 15 000 (boucherie) ; commission 1 500 ; entrée de caisse 150 000
+    assert.equal(body.data.caGlobal.day, 366500);
+  });
+
   it("additionne les sorties de caisse du jour", async () => {
     const { body } = await api(cookies.admin, "GET", "/api/daily-report");
     assert.equal(body.data.totals.day.totalSortieCaisse, 2000);
@@ -120,9 +134,10 @@ describe("Pages", () => {
     assert.match(body, /NEXT_REDIRECT/);
   });
 
-  it("le tableau de bord admin affiche les totaux en FCFA", async () => {
+  it("le tableau de bord admin affiche les totaux en FCFA et la section Boucherie", async () => {
     const { body } = await api(cookies.admin, "GET", "/dashboard");
     assert.match(body, /Total entrées: <!-- -->[0-9.]+ FCFA/);
+    assert.match(body, /<h3[^>]*>Boucherie<\/h3>/);
   });
 });
 

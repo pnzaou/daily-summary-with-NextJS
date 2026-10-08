@@ -24,6 +24,7 @@ export async function seed() {
     for (const [name, type] of [
       ["Quincaillerie 1", "quincaillerie"],
       ["Quincaillerie 2", "quincaillerie"],
+      ["Boucherie", "boucherie"],
       ["Appartement F4", "location"],
       ["Mazda", "location"],
       ["Commission assurance", null],
@@ -43,6 +44,7 @@ export async function seed() {
       admin: await user("admin@test.local", "Admin", "admin", []),
       gerant1: await user("gerant1@test.local", "Gerant1", "gerant", [biz["Quincaillerie 1"]]),
       gerant2: await user("gerant2@test.local", "Gerant2", "gerant", [biz["Quincaillerie 2"]]),
+      gerant3: await user("gerant3@test.local", "Gerant3", "gerant", [biz["Boucherie"]]),
       comptable: await user("comptable@test.local", "Comptable", "comptable",
         [biz["Appartement F4"], biz["Mazda"], biz["Commission assurance"]]),
     };
@@ -71,6 +73,13 @@ export async function seed() {
         revenueCash: 50000, versementTataDiara: 3000,
         sales: [{ _id: id(), ref: "ticket num 7", description: "Peinture", total: 50000 }],
         debts: [{ _id: id(), ref: "facture num 9", description: "Client B", total: 25000 }],
+      }),
+      boucherieToday: report(biz["Boucherie"], users.gerant3, today, {
+        revenueCash: 12000, revenueWave: 3000, versementTataDiara: 1000,
+        sales: [
+          { _id: id(), ref: "ticket num 11", description: "Viande", total: 7000 },
+          { _id: id(), ref: "ticket num 12", description: "Volaille", total: 8000 },
+        ],
       }),
       g1Yesterday: report(biz["Quincaillerie 1"], users.gerant1, yesterday, {
         revenueCash: 40000,
