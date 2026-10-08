@@ -18,6 +18,7 @@ import { signIn } from "next-auth/react"
 import toast from "react-hot-toast"
 import Required from "./Required"
 import { Eye, EyeOff } from "lucide-react"
+import { PASSWORD_REGEX } from "@/lib/password-rule"
 
 export function LoginForm({
   className,
@@ -27,7 +28,7 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false)
   const { handleSubmit, register, formState: { errors } } = useForm()
   const router = useRouter()
-  const mdpRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
+  const mdpRegex = PASSWORD_REGEX
   const emailRegex = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
 
   const onSubmit = async (data) => {
