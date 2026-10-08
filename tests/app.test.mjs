@@ -273,6 +273,6 @@ describe("Création de business", () => {
 
   it("seul l'admin peut créer un business", async () => {
     const { status } = await api(cookies.comptable, "POST", "/api/business", { name: "Autre test", type: "location" });
-    assert.equal(status, 401);
+    assert.equal(status, 403);
   });
 });
