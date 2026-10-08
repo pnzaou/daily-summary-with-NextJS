@@ -20,6 +20,21 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Tests
+
+Les tests (`tests/`) appellent l'application lancée en local, comme le feraient l'admin, le comptable et les gérants : connexion, droits par rôle, écritures, règle d'un rapport par jour, pages.
+
+**Ils effacent et remplissent la base désignée par `MONGODB_URI` dans `.env`** : ils refusent de tourner si le nom de la base ne contient pas « test », mais vérifiez toujours que `.env` pointe vers la base de test, jamais vers la production.
+
+```bash
+# terminal 1
+npm run dev
+# terminal 2
+npm test
+```
+
+Par défaut les tests visent `http://localhost:3000` ; pour un autre port : `TEST_BASE_URL=http://localhost:3100 npm test`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
