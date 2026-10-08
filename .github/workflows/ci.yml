@@ -1,0 +1,76 @@
+# Vérifications automatiques à chaque pull request vers main et à chaque push sur main.
+# - Lint et build : sans base de données.
+# - Tests de bout en bout (npm test) : sur la base de TEST, via le secret MONGODB_URI_TEST
+#   (Settings → Secrets and variables → Actions). Les tests effacent et remplissent cette base :
+#   le secret ne doit JAMAIS viser la production (tests/seed.mjs refuse une base sans « test » dans son nom).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-build:
+    name: Lint et build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Build
+        run: npm run build
+        env:
+          # adresse factice : le build ne se connecte pas à la base
+          MONGODB_URI: mongodb://127.0.0.1:27017/ci-build
+          NEXTAUTH_SECRET: ci-build
+
+  tests:
+    name: Tests de bout en bout
+    needs: lint-build
+    runs-on: ubuntu-latest
+    # les pull requests venant d'un fork n'ont pas accès aux secrets
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    # les tests remettent la base de test à zéro : jamais deux exécutions en même temps
+    concurrency:
+      group: base-de-test
+      cancel-in-progress: false
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
+      NEXTAUTH_SECRET: ci-${{ github.run_id }}
+    steps:
+      - name: Vérifier la configuration
+        if: env.MONGODB_URI == ''
+        run: |
+          echo "::error::Secret MONGODB_URI_TEST manquant : Settings → Secrets and variables → Actions (base de test uniquement)."
+          exit 1
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # npm test charge .env (--env-file) ; les variables du job sont prioritaires sur ce fichier vide
+      - run: touch .env
+      - name: Démarrer l'application
+        run: |
+          nohup npm run dev > dev.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -s -o /dev/null http://localhost:3000/api/auth/csrf && exit 0
+            sleep 2
+          done
+          echo "::error::L'application n'a pas démarré"
+          exit 1
+      - run: npm test
+      - name: Journal du serveur (en cas d'échec)
+        if: failure()
+        # dépôt public : on n'affiche pas les lignes mentionnant l'adresse du cluster
+        run: grep -v "mongodb.net" dev.log | tail -100 || true
