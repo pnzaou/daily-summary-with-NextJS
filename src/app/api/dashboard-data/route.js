@@ -5,7 +5,7 @@ import DailyReport from "@/models/DailyReport.Model";
 import RapportCompta from "@/models/RapportCompta.Model";
 import { NextResponse } from "next/server";
 import Business from "@/models/Business.Model";
-import { COMMISSION_ASSURANCE, LOCATIONS, PLATEFORMES, QUINCAILLERIES } from "@/lib/constants";
+import { COMMISSION_ASSURANCE, PLATEFORMES } from "@/lib/constants";
 
 export const GET = withRoles(["admin", "comptable"], async (req) => {
   try {
@@ -79,8 +79,8 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
     const startMon = new Date(now.getFullYear(), now.getMonth(), 1);
     const startYear = new Date(now.getFullYear(), 0, 1);
 
-    // --- Helpers d’agrégation DailyReport ---
-    async function aggregateFromDailyReport(from, names) {
+    // --- Helpers d’agrégation DailyReport (business regroupés par leur type) ---
+    async function aggregateFromDailyReport(from, types) {
       const pipeline = [
         { $match: { date: { $gte: from } } },
         {
@@ -92,7 +92,7 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
           },
         },
         { $unwind: "$biz" },
-        { $match: { "biz.name": { $in: names } } },
+        { $match: { "biz.type": { $in: types } } },
         {
           $project: {
             revenueCash: 1,
@@ -132,7 +132,7 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
     }
 
     // --- Helper entrée location depuis RapportCompta ---
-    async function aggregateFromRapportCompta(from, names) {
+    async function aggregateFromRapportCompta(from, types) {
       const pipeline = [
         { $match: { date: { $gte: from } } },
         { $unwind: "$caissePrincipale.entrees" },
@@ -145,7 +145,7 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
           },
         },
         { $unwind: "$biz" },
-        { $match: { "biz.name": { $in: names } } },
+        { $match: { "biz.type": { $in: types } } },
         {
           $group: {
             _id: null,
@@ -158,9 +158,9 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
     }
 
     // --- Fusion locations = daily + compta ---
-    async function aggregateLocations(from, names) {
-      const dr = await aggregateFromDailyReport(from, names);
-      const rcE = await aggregateFromRapportCompta(from, names);
+    async function aggregateLocations(from, types) {
+      const dr = await aggregateFromDailyReport(from, types);
+      const rcE = await aggregateFromRapportCompta(from, types);
       return { ...dr, totalCash: dr.totalCash + rcE };
     }
 
@@ -238,19 +238,26 @@ export const GET = withRoles(["admin", "comptable"], async (req) => {
     const plateformesClean = plateformes.filter(Boolean);
 
     // --- Calcul des totaux DailyReport et CA global ---
-    const quincailleries = QUINCAILLERIES;
-    const locations      = LOCATIONS;
+    const quincailleries = ["quincaillerie"];
+    const boucheries     = ["boucherie"];
+    const locations      = ["location"];
 
     const drTotals = {
+      // rapports de gérants comptés dans le CA global
       plain: {
-        day:   await aggregateFromDailyReport(startDay, quincailleries.concat(locations)),
-        month: await aggregateFromDailyReport(startMon,  quincailleries.concat(locations)),
-        year:  await aggregateFromDailyReport(startYear, quincailleries.concat(locations)),
+        day:   await aggregateFromDailyReport(startDay, [...quincailleries, ...boucheries, ...locations]),
+        month: await aggregateFromDailyReport(startMon,  [...quincailleries, ...boucheries, ...locations]),
+        year:  await aggregateFromDailyReport(startYear, [...quincailleries, ...boucheries, ...locations]),
       },
       quincailleries: {
         day:   await aggregateFromDailyReport(startDay, quincailleries),
         month: await aggregateFromDailyReport(startMon, quincailleries),
         year:  await aggregateFromDailyReport(startYear, quincailleries),
+      },
+      boucheries: {
+        day:   await aggregateFromDailyReport(startDay, boucheries),
+        month: await aggregateFromDailyReport(startMon, boucheries),
+        year:  await aggregateFromDailyReport(startYear, boucheries),
       },
       locations: {
         day:   await aggregateLocations(startDay, locations),

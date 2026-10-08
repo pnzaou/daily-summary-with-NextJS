@@ -10,7 +10,7 @@ const BusinessSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["location", "quincaillerie"],
+      enum: ["location", "quincaillerie", "boucherie"],
       required: false,
       default: null
     }

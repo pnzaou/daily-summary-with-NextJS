@@ -1,5 +1,5 @@
 // Donne à chaque business des listes de src/lib/constants.js le type correspondant
-// ("quincaillerie" ou "location"), préalable au regroupement du tableau de bord par type.
+// ("quincaillerie", "boucherie" ou "location"), utilisé par le tableau de bord pour les regrouper.
 // Seuls les business présents dans ces listes sont concernés.
 //
 // Par défaut le script ne fait que LIRE et affiche les changements prévus.
@@ -12,7 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import mongoose from "mongoose";
-import { QUINCAILLERIES, LOCATIONS } from "../src/lib/constants.js";
+import { QUINCAILLERIES, BOUCHERIES, LOCATIONS } from "../src/lib/constants.js";
 
 const apply = process.argv.includes("--apply");
 const uri = process.env.MONGODB_URI;
@@ -28,6 +28,7 @@ console.log(`Base : ${mongoose.connection.host} / ${db.databaseName}\n`);
 
 const expectedType = new Map([
   ...QUINCAILLERIES.map((name) => [name, "quincaillerie"]),
+  ...BOUCHERIES.map((name) => [name, "boucherie"]),
   ...LOCATIONS.map((name) => [name, "location"]),
 ]);
 
