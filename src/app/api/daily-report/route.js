@@ -5,7 +5,7 @@ import { withRoles } from "@/utils/withRoles"
 import mongoose from "mongoose"
 import { NextResponse } from "next/server"
 import Business from "@/models/Business.Model"
-import { cleanLines, cleanSortieLines } from "@/lib/report-lines"
+import { cleanLines, cleanSortieLines, findIncompleteLine } from "@/lib/report-lines"
 
 const DUPLICATE_MESSAGE =
   "Un rapport a déjà été envoyé aujourd'hui pour cette activité. Modifiez-le depuis « Voir mes rapports »."
@@ -57,6 +57,21 @@ export const POST = withRoles(["gerant", "admin"], async (req, context, session)
       }
     }
 
+    const cleanSales = cleanLines(sales);
+    const cleanDebts = cleanLines(debts);
+    const cleanRegs  = cleanLines(reglementDebts);
+    const cleanSortieCaisse = cleanSortieLines(sortieCaisse);
+
+    const incomplete = findIncompleteLine({
+      sales: cleanSales, debts: cleanDebts, reglementDebts: cleanRegs, sortieCaisse: cleanSortieCaisse,
+    });
+    if (incomplete) {
+      return NextResponse.json(
+        { message: incomplete, success: false, error: true },
+        { status: 400 }
+      );
+    }
+
     // un seul rapport par gérant, activité et jour (début de journée, comme le défaut du modèle)
     const date = new Date();
     date.setHours(0, 0, 0, 0);
@@ -66,11 +81,6 @@ export const POST = withRoles(["gerant", "admin"], async (req, context, session)
         { status: 409 }
       );
     }
-
-    const cleanSales = cleanLines(sales);
-    const cleanDebts = cleanLines(debts);
-    const cleanRegs  = cleanLines(reglementDebts);
-    const cleanSortieCaisse = cleanSortieLines(sortieCaisse);
 
     // reglements groupés par ref
     const regsByRef = cleanRegs.reduce((map, { ref, total }) => {
