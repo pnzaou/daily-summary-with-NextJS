@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import { BUSINESS_TYPES } from "@/lib/business-types";
 
 // Types regroupés sur le tableau de bord ; un business sans type n'apparaît dans aucune section
-export const BUSINESS_TYPES = ["location", "quincaillerie", "boucherie"];
+export { BUSINESS_TYPES };
 
 const BusinessSchema = new mongoose.Schema(
   {

@@ -33,6 +33,11 @@ const Header = ({userName}) => {
                 Utilisateurs
               </Link>
             )}
+            {session.user.role === "admin" && (
+              <Link href="/dashboard/activites" className="text-sm font-medium text-gray-700 hover:text-blue-600">
+                Activités
+              </Link>
+            )}
             <Link href="/dashboard/mon-compte" className="text-sm font-medium text-gray-700 hover:text-blue-600">
               Mon compte
             </Link>
