@@ -224,3 +224,55 @@ describe("Écritures", () => {
     assert.equal((await api(cookies.comptable, "PATCH", "/api/dettes/toggle", data)).body.newStatus, "impayée");
   });
 });
+
+describe("Lignes incomplètes", () => {
+  it("une vente sans référence est refusée avec un message clair (création)", async () => {
+    const { status, body } = await api(cookies.gerant1, "POST", "/api/daily-report", {
+      business: ids.biz["Quincaillerie 1"],
+      sales: [{ ref: "", description: "Ciment", total: 5000 }],
+    });
+    assert.equal(status, 400);
+    assert.match(body.message, /Ligne de vente « Ciment » sans référence/);
+  });
+
+  it("une vente sans description est refusée (modification)", async () => {
+    const { status, body } = await api(cookies.gerant1, "PUT", resolve("/api/daily-report/:g1"), {
+      sales: [{ ref: "facture num 1", description: "", total: 100 }],
+    });
+    assert.equal(status, 400);
+    assert.match(body.message, /Ligne de vente « facture num 1 » sans description/);
+  });
+
+  it("une sortie de caisse sans description est refusée", async () => {
+    const { status, body } = await api(cookies.gerant1, "PUT", resolve("/api/daily-report/:g1"), {
+      sortieCaisse: [{ description: "", total: 500 }],
+    });
+    assert.equal(status, 400);
+    assert.match(body.message, /Ligne de sortie de caisse « 500 FCFA » sans description/);
+  });
+});
+
+describe("Création de business", () => {
+  it("l'admin crée un business avec son type", async () => {
+    const { status, body } = await api(cookies.admin, "POST", "/api/business", { name: "Boucherie 2", type: "boucherie" });
+    assert.equal(status, 201);
+    assert.equal(body.data.type, "boucherie");
+  });
+
+  it("un type inconnu est refusé", async () => {
+    const { status } = await api(cookies.admin, "POST", "/api/business", { name: "Pharmacie", type: "pharmacie" });
+    assert.equal(status, 400);
+  });
+
+  it("sans type, le business est créé mais l'admin est prévenu", async () => {
+    const { status, body } = await api(cookies.admin, "POST", "/api/business", { name: "Divers" });
+    assert.equal(status, 201);
+    assert.equal(body.data.type, null);
+    assert.match(body.message, /n'apparaîtra dans aucune section/);
+  });
+
+  it("seul l'admin peut créer un business", async () => {
+    const { status } = await api(cookies.comptable, "POST", "/api/business", { name: "Autre test", type: "location" });
+    assert.equal(status, 401);
+  });
+});

@@ -35,6 +35,15 @@ npm test
 
 Par défaut les tests visent `http://localhost:3000` ; pour un autre port : `TEST_BASE_URL=http://localhost:3100 npm test`.
 
+### Sur GitHub (CI)
+
+`.github/workflows/ci.yml` lance le lint et le build, puis `npm test`, à chaque pull request vers `main` et à chaque push sur `main`. Pour les tests de bout en bout, il faut :
+
+1. un secret **`MONGODB_URI_TEST`** (*Settings → Secrets and variables → Actions*) contenant l'URI de la **base de test** — idéalement avec un utilisateur MongoDB qui n'a accès qu'à cette base ;
+2. que MongoDB Atlas accepte les connexions depuis GitHub Actions (*Network Access*), dont les adresses IP changent à chaque exécution.
+
+Sans ce secret, le lint et le build tournent quand même ; seul le job de tests échoue en indiquant le secret manquant.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

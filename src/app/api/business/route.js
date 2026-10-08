@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnection from "@/lib/db";
 import { withAuthAndRole } from "@/utils/withAuthAndRole";
-import Business from "@/models/Business.Model";
+import Business, { BUSINESS_TYPES } from "@/models/Business.Model";
 
 export const POST = withAuthAndRole(async (req) => {
   try {
     await dbConnection();
-    const { name } = await req.json();
+    const { name, type = null } = await req.json();
     if (!name || !name.trim()) {
       return NextResponse.json(
         {
@@ -18,8 +18,19 @@ export const POST = withAuthAndRole(async (req) => {
       );
     }
 
+    if (type !== null && !BUSINESS_TYPES.includes(type)) {
+      return NextResponse.json(
+        {
+          message: `Type invalide. Valeurs possibles : ${BUSINESS_TYPES.join(", ")} (ou aucun type).`,
+          success: false,
+          error: true,
+        },
+        { status: 400 }
+      );
+    }
+
     const trimmed = name.trim();
-    
+
     const exists = await Business.findOne({ name: trimmed });
     if (exists) {
       return NextResponse.json(
@@ -33,11 +44,13 @@ export const POST = withAuthAndRole(async (req) => {
     }
 
     // Création
-    const newBusiness = await Business.create({ name: trimmed });
+    const newBusiness = await Business.create({ name: trimmed, type });
 
     return NextResponse.json(
       {
-        message: "Business créé avec succès.",
+        message: type
+          ? "Business créé avec succès."
+          : "Business créé sans type : il n'apparaîtra dans aucune section du tableau de bord.",
         data: newBusiness,
         success: true,
         error: false,

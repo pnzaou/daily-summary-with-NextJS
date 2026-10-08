@@ -15,6 +15,30 @@ export function cleanLines(arr) {
     );
 }
 
+const LINE_LABELS = {
+  sales: "vente",
+  debts: "dette",
+  reglementDebts: "règlement",
+  sortieCaisse: "sortie de caisse",
+};
+
+// Lignes déjà nettoyées → message lisible pour la première ligne incomplète, ou null.
+// Le modèle exige une référence (sauf sorties de caisse) et une description sur chaque ligne.
+export function findIncompleteLine(lines) {
+  for (const [key, label] of Object.entries(LINE_LABELS)) {
+    for (const line of lines[key] || []) {
+      if (key !== "sortieCaisse" && !line.ref) {
+        return `Ligne de ${label} « ${line.description || `${line.total} FCFA`} » sans référence : `
+          + "indiquez « facture num … », « ticket num … » ou « reçu num … ».";
+      }
+      if (!line.description) {
+        return `Ligne de ${label} « ${line.ref || `${line.total} FCFA`} » sans description.`;
+      }
+    }
+  }
+  return null;
+}
+
 // Sorties de caisse : { description, total }
 export function cleanSortieLines(arr) {
   return (Array.isArray(arr) ? arr : [])
