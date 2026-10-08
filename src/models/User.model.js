@@ -36,6 +36,21 @@ const UserSchema = new mongoose.Schema(
         required: false,
       },
     ],
+    // Un compte désactivé ne peut plus se connecter et sa session est coupée.
+    // Les comptes créés avant ce champ ne l'ont pas : absent = actif.
+    actif: {
+      type: Boolean,
+      default: true,
+    },
+    // Mot de passe provisoire (création ou réinitialisation) : à changer à la prochaine connexion
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -16,6 +16,10 @@ const Pages = async () => {
     if (!session) {
       redirect("/");
     }
+    // mot de passe provisoire (création ou réinitialisation) : à changer avant tout
+    if (session.user.mustChangePassword) {
+      redirect("/dashboard/mon-compte");
+    }
     await dbConnection()
     let business = []
     let dailyReport = {}

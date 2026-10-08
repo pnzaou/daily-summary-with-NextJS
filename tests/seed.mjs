@@ -34,9 +34,10 @@ export async function seed() {
     }
 
     const password = await bcrypt.hash(TEST_PASSWORD, 10);
-    const user = async (email, prenom, role, businesses) => {
+    // comme en production, les comptes n'ont pas les champs actif / mustChangePassword (absent = actif)
+    const user = async (email, prenom, role, businesses, extra = {}) => {
       const { insertedId } = await db.collection("users").insertOne({
-        nom: "Test", prenom, email, password, role, businesses, createdAt: now, updatedAt: now,
+        nom: "Test", prenom, email, password, role, businesses, createdAt: now, updatedAt: now, ...extra,
       });
       return insertedId;
     };
@@ -45,6 +46,8 @@ export async function seed() {
       gerant1: await user("gerant1@test.local", "Gerant1", "gerant", [biz["Quincaillerie 1"]]),
       gerant2: await user("gerant2@test.local", "Gerant2", "gerant", [biz["Quincaillerie 2"]]),
       gerant3: await user("gerant3@test.local", "Gerant3", "gerant", [biz["Boucherie"]]),
+      admin2: await user("admin2@test.local", "Admin2", "admin", []),
+      inactif: await user("inactif@test.local", "Inactif", "gerant", [biz["Quincaillerie 1"]], { actif: false }),
       comptable: await user("comptable@test.local", "Comptable", "comptable",
         [biz["Appartement F4"], biz["Mazda"], biz["Commission assurance"]]),
     };

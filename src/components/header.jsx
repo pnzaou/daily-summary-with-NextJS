@@ -1,6 +1,7 @@
 "use client";
 
 import { LogOut } from "lucide-react";
+import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -26,13 +27,23 @@ const Header = ({userName}) => {
             Bonjour {userName}
           </span>
 
-          <button
-            onClick={() => signOut({})}
-            className="text-gray-600 hover:text-red-600 transition-colors duration-200"
-            title="Se déconnecter"
-          >
-            <LogOut className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-4">
+            {["admin", "comptable"].includes(session.user.role) && (
+              <Link href="/dashboard/utilisateurs" className="text-sm font-medium text-gray-700 hover:text-blue-600">
+                Utilisateurs
+              </Link>
+            )}
+            <Link href="/dashboard/mon-compte" className="text-sm font-medium text-gray-700 hover:text-blue-600">
+              Mon compte
+            </Link>
+            <button
+              onClick={() => signOut({})}
+              className="text-gray-600 hover:text-red-600 transition-colors duration-200"
+              title="Se déconnecter"
+            >
+              <LogOut className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </div>
     </nav>

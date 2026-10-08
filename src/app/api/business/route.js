@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server";
 import dbConnection from "@/lib/db";
 import { withAuthAndRole } from "@/utils/withAuthAndRole";
+import { withRoles } from "@/utils/withRoles";
 import Business, { BUSINESS_TYPES } from "@/models/Business.Model";
+
+// Liste des activités, pour les rattacher à un compte (gestion des utilisateurs)
+export const GET = withRoles(["admin", "comptable"], async () => {
+  try {
+    await dbConnection();
+    const businesses = await Business.find({}, { name: 1, type: 1 }).sort({ name: 1 }).lean();
+    return NextResponse.json(
+      { success: true, error: false, data: businesses },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("Erreur liste business :", err);
+    return NextResponse.json(
+      { message: "Erreur serveur, veuillez réessayer.", success: false, error: true },
+      { status: 500 }
+    );
+  }
+});
 
 export const POST = withAuthAndRole(async (req) => {
   try {

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --env-file=.env --test tests/*.test.mjs"
+    "test": "node --env-file=.env --test --test-concurrency=1 tests/*.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
