@@ -117,6 +117,33 @@ for (const [label, withNames, withTypes] of groups) {
   }
 }
 
+// --- 3. Activités dont les rapports n'entrent dans aucun total (ni section, ni CA global) ---
+const encaisse = { $add: [
+  { $ifNull: ["$revenueCash", 0] }, { $ifNull: ["$revenueOrangeMoney", 0] }, { $ifNull: ["$revenueWave", 0] },
+] };
+const outside = await db.collection("dailyreports").aggregate([
+  { $lookup: { from: "businesses", localField: "business", foreignField: "_id", as: "biz" } },
+  { $unwind: "$biz" },
+  { $match: { "biz.name": { $nin: [...QUINCAILLERIES, ...LOCATIONS] } } },
+  {
+    $group: {
+      _id: "$biz.name",
+      rapports: { $sum: 1 },
+      dernier: { $max: "$date" },
+      encaisseAnnee: { $sum: { $cond: [{ $gte: ["$date", periods["cette année"]] }, encaisse, 0] } },
+      encaisseTotal: { $sum: encaisse },
+    },
+  },
+  { $sort: { encaisseTotal: -1 } },
+]).toArray();
+
+console.log("\n== Rapports de gérants comptés nulle part dans le tableau de bord (ni section, ni CA global)");
+if (outside.length === 0) console.log("  (aucun)");
+for (const o of outside) {
+  console.log(`  ${o._id.padEnd(26)} ${o.rapports} rapport(s), dernier le ${o.dernier?.toISOString().slice(0, 10)},`
+    + ` encaissé cette année ${fmt(o.encaisseAnnee)}, depuis le début ${fmt(o.encaisseTotal)}`);
+}
+
 console.log(totalDiffs === 0 && typeProblems === 0
   ? "\nVerdict : passer aux types ne changerait aucun chiffre du tableau de bord."
   : `\nVerdict : ${typeProblems} écart(s) de type et ${totalDiffs} total(aux) différent(s). `
